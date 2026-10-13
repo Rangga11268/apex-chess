@@ -1,12 +1,34 @@
 {
-  "name": "chessmint",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "webpack --config webpack.config.js"
+  "name": "apex-chess",
+  "version": "2.0.0",
+  "description": "Apex Chess - Real-Time Stockfish Engine Analysis, Evaluation Bar, and Assistant for Chess.com",
+  "main": "dist/js/chessmint.js",
+  "homepage": "https://github.com/Rangga11268/apex-chess",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Rangga11268/apex-chess.git"
   },
-  "keywords": [],
+  "scripts": {
+    "build": "webpack --config webpack.config.js",
+    "build:tsc": "tsc",
+    "test": "node test/test_chessmint.js"
+  },
+  "keywords": [
+    "chess",
+    "chess-com",
+    "chess-engine",
+    "stockfish",
+    "stockfish-engine",
+    "chesscom-bot",
+    "chess-bot",
+    "chess-analysis",
+    "evaluation-bar",
+    "chess-extension",
+    "chess-cheat",
+    "chess-assist",
+    "chrome-extension",
+    "chesscom-extension"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -16,5 +38,8 @@
     "typescript": "^4.9.3",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.0"
+  },
+  "dependencies": {
+    "stockfish.js": "^10.0.2"
   }
 }

@@ -1,23 +1,3 @@
-// // Saves options to chrome.storage
-// function save_options()
-// {
-//     var color = document.getElementById('color').value;
-//     var likesColor = document.getElementById('like').checked;
-//     chrome.storage.sync.set({
-//         favoriteColor: color,
-//         likesColor: likesColor
-//     }, function ()
-//     {
-//         // Update status to let user know options were saved.
-//         var status = document.getElementById('status');
-//         status.textContent = 'Options saved.';
-//         setTimeout(function ()
-//         {
-//             status.textContent = '';
-//         }, 750);
-//     });
-// }
-
 var inputDepth: HTMLInputElement;
 var inputThreads: HTMLInputElement;
 var inputShowHints: HTMLInputElement;
@@ -26,9 +6,13 @@ var inputDepthBar: HTMLInputElement;
 var inputEvalBar: HTMLInputElement;
 var inputAutoMove: HTMLInputElement;
 var inputUseNNUE: HTMLInputElement;
+var btnLangId: HTMLElement | null;
+var btnLangEn: HTMLElement | null;
+
+var currentLanguage: "id" | "en" = "id";
 
 const DefaultExtensionOptions: ExtensionOptions = {
-    depth: 15,
+    depth: 12,
     threads: 2,
     show_hints: true,
     move_analysis: true,
@@ -36,22 +20,135 @@ const DefaultExtensionOptions: ExtensionOptions = {
     evaluation_bar: true,
     use_nnue: false,
     auto_move: false,
+    language: "id",
+};
+
+interface TranslationItem {
+    id: string;
+    en: string;
 }
 
+const Translations: { [key: string]: TranslationItem } = {
+    titleDepth: {
+        id: "KEDALAMAN ENGINE",
+        en: "ENGINE DEPTH"
+    },
+    titleThreads: {
+        id: "THREAD CPU",
+        en: "CPU THREADS"
+    },
+    labelShowHints: {
+        id: "Tampilkan Petunjuk Langkah",
+        en: "Show Move Hints"
+    },
+    tooltipShowHints: {
+        id: "Tampilkan panah langkah terbaik khusus saat giliran Anda.",
+        en: "Show best move arrows only on your turn."
+    },
+    labelMoveAnalysis: {
+        id: "Analisis Kualitas Langkah",
+        en: "Move Quality Analysis"
+    },
+    tooltipMoveAnalysis: {
+        id: "Tampilkan badge kualitas: Brilliant, Best Move, Inaccuracy, dll.",
+        en: "Show quality badges: Brilliant, Best Move, Inaccuracy, etc."
+    },
+    labelDepthBar: {
+        id: "Bilah Progres Kalkulasi",
+        en: "Depth Progress Bar"
+    },
+    tooltipDepthBar: {
+        id: "Tampilkan status progress kalkulasi Stockfish.",
+        en: "Show progress bar while engine is evaluating."
+    },
+    labelEvalBar: {
+        id: "Bilah Evaluasi (Eval Bar)",
+        en: "Evaluation Advantage Bar"
+    },
+    tooltipEvalBar: {
+        id: "Tampilkan keuntungan posisi secara langsung di sisi papan.",
+        en: "Show live real-time position advantage on the board."
+    },
+    labelUseNNUE: {
+        id: "Gunakan Neural Network (NNUE)",
+        en: "Use Neural Network (NNUE)"
+    },
+    tooltipUseNNUE: {
+        id: "Evaluasi lebih akurat namun membutuhkan file network ~45MB.",
+        en: "Higher accuracy evaluation, requires downloading ~45MB file."
+    },
+    labelAutoMove: {
+        id: "Jalan Otomatis (Anti-Cheat Jitter)",
+        en: "Auto Move (Anti-Cheat Jitter)"
+    },
+    tooltipAutoMove: {
+        id: "Langkah otomatis dengan jeda alami manusia (800ms-2200ms) dan randomisasi langkah 2.",
+        en: "Automatic moves with humanized delay (800ms-2200ms) and occasional rank-2 picks."
+    },
+    warningAutoMove: {
+        id: "PERINGATAN: Gunakan hanya untuk latihan melawan bot catur.",
+        en: "WARNING: Use only against chess bots for practice."
+    },
+    statusSave: {
+        id: "Pengaturan tersimpan otomatis",
+        en: "Settings saved automatically"
+    }
+};
+
+function ApplyLanguage(lang: "id" | "en")
+{
+    currentLanguage = lang;
+    document.documentElement.lang = lang;
+
+    if (btnLangId && btnLangEn)
+    {
+        if (lang === "id")
+        {
+            btnLangId.classList.add("active");
+            btnLangEn.classList.remove("active");
+        }
+        else
+        {
+            btnLangEn.classList.add("active");
+            btnLangId.classList.remove("active");
+        }
+    }
+
+    document.querySelectorAll("[data-i18n]").forEach((el) =>
+    {
+        const key = el.getAttribute("data-i18n");
+        if (key && Translations[key])
+        {
+            el.textContent = Translations[key][lang];
+        }
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach((el) =>
+    {
+        const key = el.getAttribute("data-i18n-title");
+        if (key && Translations[key])
+        {
+            (el as HTMLElement).innerText = Translations[key][lang] + ":";
+        }
+    });
+}
 
 function RestoreOptions()
 {
     chrome.storage.sync.get(DefaultExtensionOptions, function (opts)
     {
         let options = opts as ExtensionOptions;
-        inputDepth.value = options.depth.toString();
-        inputThreads.value = options.threads.toString();
-        inputShowHints.checked = options.show_hints;
-        inputMoveAnalysis.checked = options.move_analysis;
-        inputDepthBar.checked = options.depth_bar;
-        inputEvalBar.checked = options.evaluation_bar;
-        inputUseNNUE.checked = options.use_nnue;
-        inputAutoMove.checked = options.auto_move;
+        inputDepth.value = (options.depth || 12).toString();
+        inputThreads.value = (options.threads || 2).toString();
+        inputShowHints.checked = options.show_hints !== undefined ? options.show_hints : true;
+        inputMoveAnalysis.checked = options.move_analysis !== undefined ? options.move_analysis : true;
+        inputDepthBar.checked = options.depth_bar !== undefined ? options.depth_bar : true;
+        inputEvalBar.checked = options.evaluation_bar !== undefined ? options.evaluation_bar : true;
+        inputUseNNUE.checked = options.use_nnue || false;
+        inputAutoMove.checked = options.auto_move || false;
+
+        currentLanguage = options.language === "en" ? "en" : "id";
+        ApplyLanguage(currentLanguage);
 
         let event = new CustomEvent("input");
         (event as any).disableUpdate = true;
@@ -71,26 +168,46 @@ function OnOptionsChange()
         evaluation_bar: inputEvalBar.checked,
         use_nnue: inputUseNNUE.checked,
         auto_move: inputAutoMove.checked,
-    }
+        language: currentLanguage,
+    };
 
     chrome.storage.sync.set(options);
 
-    chrome.tabs.query({}, function (tabs)
+    // Only query chess.com tabs where the content script is active
+    chrome.tabs.query({ url: "*://*.chess.com/*" }, function (tabs)
     {
+        if (chrome.runtime.lastError || !tabs) return;
+
         tabs.forEach(function (tab)
         {
-            chrome.tabs.sendMessage(tab.id as number, { type: "UpdateOptions", data: options });
-        })
-    });
-    // chrome.tabs.query({ active: true, currentWindow: true }, function (tabs)
-    // {
-    //     if (tabs[0].id === undefined) return;
+            if (tab.id !== undefined)
+            {
+                try
+                {
+                    const maybePromise = (chrome.tabs.sendMessage as any)(
+                        tab.id,
+                        { type: "UpdateOptions", data: options },
+                        function ()
+                        {
+                            if (chrome.runtime.lastError)
+                            {
+                                // Tab might still be loading or navigated away
+                            }
+                        }
+                    );
 
-    //     chrome.tabs.sendMessage(tabs[0].id, { type: "getText" }, function (response)
-    //     {
-    //         alert(response)
-    //     });
-    // });
+                    if (maybePromise && typeof maybePromise.catch === "function")
+                    {
+                        maybePromise.catch(function () {});
+                    }
+                }
+                catch (e)
+                {
+                    // Ignore connection errors if tab was closed
+                }
+            }
+        });
+    });
 }
 
 function InitOptions()
@@ -104,11 +221,31 @@ function InitOptions()
     inputUseNNUE = document.getElementById("option-use-nnue") as HTMLInputElement;
     inputAutoMove = document.getElementById("option-auto-move") as HTMLInputElement;
 
-    const sliderProps = {
-        fill: "#2CA137",
-        background: "rgba(255, 255, 255, 0.214)",
-    };
+    btnLangId = document.getElementById("lang-btn-id");
+    btnLangEn = document.getElementById("lang-btn-en");
 
+    if (btnLangId)
+    {
+        btnLangId.addEventListener("click", () =>
+        {
+            ApplyLanguage("id");
+            OnOptionsChange();
+        });
+    }
+
+    if (btnLangEn)
+    {
+        btnLangEn.addEventListener("click", () =>
+        {
+            ApplyLanguage("en");
+            OnOptionsChange();
+        });
+    }
+
+    const sliderProps = {
+        fill: "#00F5FF",
+        background: "rgba(255, 255, 255, 0.12)",
+    };
 
     document.querySelectorAll(".options-slider").forEach(function (slider)
     {
@@ -133,7 +270,7 @@ function InitOptions()
             if (!(event as any).disableUpdate)
                 OnOptionsChange();
         });
-    })
+    });
 
     document.querySelectorAll(".options-checkbox").forEach(function (checkbox)
     {

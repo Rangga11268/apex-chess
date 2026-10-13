@@ -261,4 +261,8 @@ interface ExtensionOptions
     evaluation_bar: boolean;
     use_nnue: boolean;
     auto_move: boolean;
+    language?: "id" | "en";
+    stockfishUrl?: string;
+    ecoUrl?: string;
+    auto_move_delay?: number;
 }

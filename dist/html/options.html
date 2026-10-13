@@ -1,90 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 
 <head>
-    <title>My Test Extension Options</title>
+    <meta charset="utf-8">
+    <title>Apex Chess</title>
     <link rel="stylesheet" type="text/css" href="../css/options.css">
     <link rel="stylesheet" type="text/css" href="../css/material-icon.css">
     <script src="../js/options.js"></script>
 </head>
 
 <body>
-    <div class="header-logo">
-        <img src="../img/logo-h.png" alt="ChessMint" class="main-logo">
+    <div class="header-container">
+        <div class="header-top">
+            <img src="../img/logo-h.png" alt="Apex Chess" class="main-logo" />
+            <div class="lang-switch" role="group" aria-label="Language Selector">
+                <button type="button" id="lang-btn-id" class="lang-btn active" title="Bahasa Indonesia">ID</button>
+                <button type="button" id="lang-btn-en" class="lang-btn" title="English">EN</button>
+            </div>
+        </div>
+        <div class="header-subbar">
+            <span class="status-badge" data-i18n="statusSave">Pengaturan tersimpan otomatis</span>
+            <span class="version-tag">v2.0 PRO</span>
+        </div>
     </div>
+
     <div class="container">
 
-        <div class="options-slider" data-min="1" data-max="30">
-            <div class="title">ENGINE DEPTH:</div>
-            <input id="option-depth" type="range" value="15" />
+        <!-- Sliders -->
+        <div class="options-slider" data-min="1" data-max="25">
+            <div class="title" data-i18n-title="titleDepth">KEDALAMAN ENGINE:</div>
+            <input id="option-depth" type="range" value="12" />
         </div>
 
         <div class="options-slider" data-min="1" data-max="8">
-            <div class="title">THREADS:</div>
+            <div class="title" data-i18n-title="titleThreads">THREAD CPU:</div>
             <input id="option-threads" type="range" value="2" />
+        </div>
+
+        <!-- Section Title: Core Analysis -->
+        <div class="section-divider">
+            <span class="divider-line"></span>
+            <span class="divider-text">ANALYSIS & HINTS</span>
+            <span class="divider-line"></span>
         </div>
 
         <div class="options-checkbox">
             <input id="option-show-hints" type="checkbox" />
-            <label for="option-show-hints">Show Hints
+            <label for="option-show-hints">
+                <span data-i18n="labelShowHints">Tampilkan Petunjuk Langkah</span>
                 <div class="tooltip">
-                    <span class="material-icons" style="color: #777777; font-size: 20px !important;">help</span>
-                    <span class="tooltiptext">What next? Enable hints during play.</span>
+                    <span class="material-icons info-icon">help_outline</span>
+                    <span class="tooltiptext" data-i18n="tooltipShowHints">Tampilkan panah langkah terbaik khusus saat giliran Anda.</span>
                 </div>
             </label>
         </div>
 
         <div class="options-checkbox">
             <input id="option-move-analysis" type="checkbox" />
-            <label for="option-move-analysis">Move Analysis
+            <label for="option-move-analysis">
+                <span data-i18n="labelMoveAnalysis">Analisis Kualitas Langkah</span>
                 <div class="tooltip">
-                    <span class="material-icons" style="color: #777777; font-size: 20px !important;">help</span>
-                    <span class="tooltiptext">See how every move compares to the best move.</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-depth-bar" type="checkbox" />
-            <label for="option-depth-bar">Progress Bar
-                <div class="tooltip">
-                    <span class="material-icons" style="color: #777777; font-size: 20px !important;">help</span>
-                    <span class="tooltiptext">Has the engine finished thinking? Enable the progress bar.</span>
+                    <span class="material-icons info-icon">help_outline</span>
+                    <span class="tooltiptext" data-i18n="tooltipMoveAnalysis">Tampilkan badge kualitas: Brilliant, Best Move, Inaccuracy, dll.</span>
                 </div>
             </label>
         </div>
 
         <div class="options-checkbox">
             <input id="option-evaluation-bar" type="checkbox" />
-            <label for="option-evaluation-bar">Evaluation Bar
+            <label for="option-evaluation-bar">
+                <span data-i18n="labelEvalBar">Bilah Evaluasi (Eval Bar)</span>
                 <div class="tooltip">
-                    <span class="material-icons" style="color: #777777; font-size: 20px !important;">help</span>
-                    <span class="tooltiptext">Who is winning now? Enable the evaluation bar.</span>
+                    <span class="material-icons info-icon">help_outline</span>
+                    <span class="tooltiptext" data-i18n="tooltipEvalBar">Tampilkan keuntungan posisi secara langsung di sisi papan.</span>
                 </div>
             </label>
+        </div>
+
+        <div class="options-checkbox">
+            <input id="option-depth-bar" type="checkbox" />
+            <label for="option-depth-bar">
+                <span data-i18n="labelDepthBar">Bilah Progres Kalkulasi</span>
+                <div class="tooltip">
+                    <span class="material-icons info-icon">help_outline</span>
+                    <span class="tooltiptext" data-i18n="tooltipDepthBar">Tampilkan status progress kalkulasi Stockfish.</span>
+                </div>
+            </label>
+        </div>
+
+        <!-- Section Title: Engine Engine & Stealth -->
+        <div class="section-divider">
+            <span class="divider-line"></span>
+            <span class="divider-text">ADVANCED & STEALTH</span>
+            <span class="divider-line"></span>
         </div>
 
         <div class="options-checkbox">
             <input id="option-use-nnue" type="checkbox" />
-            <label for="option-use-nnue">Use NNUE
+            <label for="option-use-nnue">
+                <span data-i18n="labelUseNNUE">Gunakan Neural Network (NNUE)</span>
                 <div class="tooltip">
-                    <span class="material-icons" style="color: #777777; font-size: 20px !important;">help</span>
-                    <span class="tooltiptext">NNUE is stronger but slower and needs more computational power. This
-                        feature requires downloading a 45Mb .nnue file on the first load.</span>
+                    <span class="material-icons info-icon">help_outline</span>
+                    <span class="tooltiptext" data-i18n="tooltipUseNNUE">Evaluasi lebih akurat namun membutuhkan file network ~45MB.</span>
                 </div>
             </label>
         </div>
 
-        <div class="options-checkbox">
+        <div class="options-checkbox highlight-risk">
             <input id="option-auto-move" type="checkbox" />
-            <label for="option-auto-move">Auto Move
+            <label for="option-auto-move">
+                <span data-i18n="labelAutoMove">Jalan Otomatis (Anti-Cheat Jitter)</span>
                 <div class="tooltip">
-                    <span class="material-icons" style="color: #777777; font-size: 20px !important;">help</span>
-                    <span class="tooltiptext">Let the computer make moves for you!
-                        <span style="color:red">
-                            Only use this feature to play against computers, using this against human players will get
-                            your account banned.
-                        </span>
+                    <span class="material-icons info-icon">warning_amber</span>
+                    <span class="tooltiptext">
+                        <span data-i18n="tooltipAutoMove">Langkah otomatis dengan jeda alami manusia (800ms-2200ms) dan randomisasi langkah 2.</span>
+                        <br/>
+                        <span style="color:#ff5555; font-weight:600;" data-i18n="warningAutoMove">PERINGATAN: Gunakan hanya untuk latihan melawan bot catur.</span>
                     </span>
                 </div>
             </label>
