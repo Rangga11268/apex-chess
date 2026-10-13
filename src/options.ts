@@ -276,8 +276,8 @@ function InitOptions()
     }
 
     const sliderProps = {
-        fill: "#00F5FF",
-        background: "rgba(255, 255, 255, 0.12)",
+        fill: "#00E5FF",
+        background: "rgba(255, 255, 255, 0.08)",
     };
 
     document.querySelectorAll(".options-slider").forEach(function (slider)

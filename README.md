@@ -10,7 +10,7 @@
 Built with an **embedded offline Stockfish UCI engine Web Worker**, Apex Chess requires no external API keys or remote servers. It runs directly inside your browser with maximum speed, humanized timing, and side-locked analysis.
 
 <p align="center">
-    <img width="420" src="dist/img/logo-h.png" alt="Apex Chess Logo">
+    <img width="650" src="img/banner-hd.png" alt="Apex Chess HD Banner">
 </p>
 
 ---
