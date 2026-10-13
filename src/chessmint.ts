@@ -274,20 +274,130 @@ class GameController
         {
             this.RemoveCurrentMarkings();
 
-            const defaultColor = this.options?.arrowColors?.default || "#2CA137";
-            const altColor = this.options?.arrowColors?.alt || "#FF9800";
+            const hintMode = options.hint_mode || "classified";
+
+            // Determine if the best move qualifies as a tactical "Brilliant" sacrifice/find
+            let isBrilliant = false;
+            if (bestMove && (bestMove.cp != null || bestMove.mate != null))
+            {
+                // Check if moving to an opponent square under threat or material sacrifice
+                const bestScore = bestMove.mate != null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp || 0);
+                if (topMoves.length > 1)
+                {
+                    const second = topMoves[1];
+                    const secondScore = second.mate != null ? (second.mate > 0 ? 10000 : -10000) : (second.cp || 0);
+                    // If best move is overwhelmingly better than 2nd best (> 180 cp gap or finding forced mate)
+                    if (bestScore - secondScore > 180 || (bestMove.mate != null && second.mate == null))
+                    {
+                        isBrilliant = true;
+                    }
+                }
+            }
+
+            // Move category palette
+            const movePalette = {
+                brilliant: "#1baca6", // Cyan/Teal (Chess.com Brilliant)
+                great:     "#5c8bb0", // Blue (Great Find)
+                best:      "#9eba5a", // Lime Green (Best Move)
+                excellent: "#96bc4b", // Greenish Olive (Excellent)
+                stealth:   "#00d4ff", // Electric Cyan (Anti-Cheat Stealth)
+                good:      "#96af8b", // Muted Sage (Good)
+                inaccuracy:"#f0c15c", // Yellow (Inaccuracy)
+                mistake:   "#e6912c", // Orange (Mistake)
+                blunder:   "#b33430", // Red (Blunder)
+            };
+
+            const bestScore = bestMove.mate != null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp || 0);
 
             topMoves.forEach((move, idx) =>
             {
                 if (isBestMove && move.depth != bestMove.depth) return;
 
-                let color = (idx == 0) ? defaultColor : altColor;
+                let arrowColor = movePalette.best;
+                let opacity = 0.85;
+                let moveTypeBadge: TEffectType | null = null;
 
+                const currentScore = move.mate != null ? (move.mate > 0 ? 10000 : -10000) : (move.cp || 0);
+                const scoreDiff = bestScore - currentScore;
+
+                if (hintMode === "stealth")
+                {
+                    // Stealth mode: Highlight the safest humanized move (Rank 2 if close enough, else Rank 1)
+                    if (idx === 1 && scoreDiff <= 80)
+                    {
+                        arrowColor = movePalette.stealth;
+                        opacity = 0.95;
+                    }
+                    else if (idx === 0)
+                    {
+                        arrowColor = movePalette.best;
+                        opacity = 0.7;
+                    }
+                    else
+                    {
+                        arrowColor = movePalette.good;
+                        opacity = 0.4;
+                    }
+                }
+                else if (hintMode === "classified")
+                {
+                    // Classify each move across the spectrum: Brilliant -> Best -> Good -> Blunder
+                    if (idx === 0)
+                    {
+                        if (isBrilliant)
+                        {
+                            arrowColor = movePalette.brilliant;
+                            moveTypeBadge = "Brilliant";
+                        }
+                        else
+                        {
+                            arrowColor = movePalette.best;
+                            moveTypeBadge = "BestMove";
+                        }
+                    }
+                    else if (scoreDiff <= 30)
+                    {
+                        arrowColor = movePalette.excellent;
+                        moveTypeBadge = "Excellent";
+                        opacity = 0.75;
+                    }
+                    else if (scoreDiff <= 90)
+                    {
+                        arrowColor = movePalette.good;
+                        moveTypeBadge = "Good";
+                        opacity = 0.65;
+                    }
+                    else if (scoreDiff <= 180)
+                    {
+                        arrowColor = movePalette.inaccuracy;
+                        moveTypeBadge = "Inaccuracy";
+                        opacity = 0.55;
+                    }
+                    else if (scoreDiff <= 300)
+                    {
+                        arrowColor = movePalette.mistake;
+                        moveTypeBadge = "Mistake";
+                        opacity = 0.5;
+                    }
+                    else
+                    {
+                        arrowColor = movePalette.blunder;
+                        moveTypeBadge = "Blunder";
+                        opacity = 0.45;
+                    }
+                }
+                else
+                {
+                    // Classic "best" mode
+                    arrowColor = (idx === 0) ? (isBrilliant ? movePalette.brilliant : movePalette.best) : movePalette.great;
+                }
+
+                // Add visual arrow
                 this.currentMarkings.push({
                     data: {
                         from: move.from,
-                        color: color,
-                        opacity: 0.7,
+                        color: arrowColor,
+                        opacity: opacity,
                         to: move.to,
                     },
                     node: true,
@@ -295,7 +405,20 @@ class GameController
                     type: "arrow",
                 });
 
-                if (move.mate != null)
+                // Add badge on target square for Brilliant, BestMove, or Mate
+                if (moveTypeBadge && (moveTypeBadge === "Brilliant" || idx === 0))
+                {
+                    this.currentMarkings.push({
+                        data: {
+                            square: move.to,
+                            type: moveTypeBadge,
+                        },
+                        node: true,
+                        persistent: true,
+                        type: "effect",
+                    });
+                }
+                else if (move.mate != null && idx === 0)
                 {
                     this.currentMarkings.push({
                         data: {
@@ -434,7 +557,7 @@ class StockfishEngine
 
         this.options = {
             "Hash": 256,
-            "MultiPV": 3,
+            "MultiPV": 4,
             "Ponder": true,
         };
 
@@ -867,7 +990,7 @@ class StockfishEngine
             }
         }
 
-        let multiPV = (this.options["MultiPV"] as number) || 3;
+        let multiPV = (this.options["MultiPV"] as number) || 4;
         let top_pv_moves = this.topMoves.slice(0, multiPV);
         this.master.game.HintMoves(top_pv_moves, this.lastTopMoves, isBestMove);
         if (this.master.options.move_analysis) this.AnalyzeLastMove();

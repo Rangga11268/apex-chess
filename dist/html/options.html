@@ -50,9 +50,25 @@
                 <span data-i18n="labelShowHints">Tampilkan Petunjuk Langkah</span>
                 <div class="tooltip">
                     <span class="material-icons info-icon">help_outline</span>
-                    <span class="tooltiptext" data-i18n="tooltipShowHints">Tampilkan panah langkah terbaik khusus saat giliran Anda.</span>
+                    <span class="tooltiptext" data-i18n="tooltipShowHints">Tampilkan panah langkah khusus saat giliran Anda.</span>
                 </div>
             </label>
+        </div>
+
+        <!-- Hint Mode Selector -->
+        <div class="options-select-row">
+            <div class="select-label-wrap">
+                <span class="select-label" data-i18n="labelHintMode">Gaya Analisis Langkah:</span>
+                <div class="tooltip">
+                    <span class="material-icons info-icon">help_outline</span>
+                    <span class="tooltiptext" data-i18n="tooltipHintMode">Pilih gaya rekomendasi: melihat spektrum langkah (Brilliant/Great/Inaccuracy/Blunder) atau saran langkah aman anti-deteksi.</span>
+                </div>
+            </div>
+            <select id="option-hint-mode" class="custom-select">
+                <option value="classified" data-i18n="optHintClassified">Spektrum Lengkap (Brilliant → Blunder)</option>
+                <option value="stealth" data-i18n="optHintStealth">Anti-Deteksi (Langkah Humanis & Aman)</option>
+                <option value="best" data-i18n="optHintBest">Langkah Terbaik Saja (Klasik)</option>
+            </select>
         </div>
 
         <div class="options-checkbox">

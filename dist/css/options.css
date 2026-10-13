@@ -210,6 +210,61 @@ body {
     transform: scale(1.25);
 }
 
+/* ── Select Dropdown Row ── */
+.options-select-row {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.options-select-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(0, 245, 255, 0.2);
+}
+
+.select-label-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.select-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8b949e;
+    letter-spacing: 0.3px;
+}
+
+.custom-select {
+    width: 100%;
+    background: #111622;
+    color: #00F5FF;
+    border: 1px solid rgba(0, 245, 255, 0.25);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+.custom-select:hover, .custom-select:focus {
+    border-color: #00F5FF;
+    box-shadow: 0 0 8px rgba(0, 245, 255, 0.3);
+}
+
+.custom-select option {
+    background: #0b0e14;
+    color: #e6edf3;
+    padding: 8px;
+}
+
 /* ── Checkbox Items ── */
 .options-checkbox {
     position: relative;

@@ -261,6 +261,7 @@ interface ExtensionOptions
     evaluation_bar: boolean;
     use_nnue: boolean;
     auto_move: boolean;
+    hint_mode?: "best" | "classified" | "stealth";
     language?: "id" | "en";
     stockfishUrl?: string;
     ecoUrl?: string;

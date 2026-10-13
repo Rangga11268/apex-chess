@@ -1,6 +1,7 @@
 var inputDepth: HTMLInputElement;
 var inputThreads: HTMLInputElement;
 var inputShowHints: HTMLInputElement;
+var inputHintMode: HTMLSelectElement;
 var inputMoveAnalysis: HTMLInputElement;
 var inputDepthBar: HTMLInputElement;
 var inputEvalBar: HTMLInputElement;
@@ -15,6 +16,7 @@ const DefaultExtensionOptions: ExtensionOptions = {
     depth: 12,
     threads: 2,
     show_hints: true,
+    hint_mode: "classified",
     move_analysis: true,
     depth_bar: true,
     evaluation_bar: true,
@@ -42,8 +44,28 @@ const Translations: { [key: string]: TranslationItem } = {
         en: "Show Move Hints"
     },
     tooltipShowHints: {
-        id: "Tampilkan panah langkah terbaik khusus saat giliran Anda.",
-        en: "Show best move arrows only on your turn."
+        id: "Tampilkan panah langkah khusus saat giliran Anda.",
+        en: "Show move arrows only on your turn."
+    },
+    labelHintMode: {
+        id: "Gaya Analisis Langkah:",
+        en: "Move Analysis Style:"
+    },
+    optHintClassified: {
+        id: "Spektrum Lengkap (Brilliant → Blunder)",
+        en: "Full Spectrum (Brilliant → Blunder)"
+    },
+    optHintStealth: {
+        id: "Anti-Deteksi (Langkah Humanis & Aman)",
+        en: "Stealth Mode (Humanized & Safe)"
+    },
+    optHintBest: {
+        id: "Langkah Terbaik Saja (Klasik)",
+        en: "Top Move Only (Classic)"
+    },
+    tooltipHintMode: {
+        id: "Pilih gaya rekomendasi: melihat spektrum langkah (Brilliant/Great/Inaccuracy/Blunder) atau saran langkah aman anti-deteksi.",
+        en: "Choose hint style: see full spectrum (Brilliant/Great/Inaccuracy/Blunder) or stealth humanized recommendations."
     },
     labelMoveAnalysis: {
         id: "Analisis Kualitas Langkah",
@@ -141,6 +163,7 @@ function RestoreOptions()
         inputDepth.value = (options.depth || 12).toString();
         inputThreads.value = (options.threads || 2).toString();
         inputShowHints.checked = options.show_hints !== undefined ? options.show_hints : true;
+        inputHintMode.value = options.hint_mode || "classified";
         inputMoveAnalysis.checked = options.move_analysis !== undefined ? options.move_analysis : true;
         inputDepthBar.checked = options.depth_bar !== undefined ? options.depth_bar : true;
         inputEvalBar.checked = options.evaluation_bar !== undefined ? options.evaluation_bar : true;
@@ -163,6 +186,7 @@ function OnOptionsChange()
         depth: parseInt(inputDepth.value),
         threads: parseInt(inputThreads.value),
         show_hints: inputShowHints.checked,
+        hint_mode: (inputHintMode.value as any) || "classified",
         move_analysis: inputMoveAnalysis.checked,
         depth_bar: inputDepthBar.checked,
         evaluation_bar: inputEvalBar.checked,
@@ -215,6 +239,7 @@ function InitOptions()
     inputDepth = document.getElementById("option-depth") as HTMLInputElement;
     inputThreads = document.getElementById("option-threads") as HTMLInputElement;
     inputShowHints = document.getElementById("option-show-hints") as HTMLInputElement;
+    inputHintMode = document.getElementById("option-hint-mode") as HTMLSelectElement;
     inputMoveAnalysis = document.getElementById("option-move-analysis") as HTMLInputElement;
     inputDepthBar = document.getElementById("option-depth-bar") as HTMLInputElement;
     inputEvalBar = document.getElementById("option-evaluation-bar") as HTMLInputElement;
@@ -238,6 +263,14 @@ function InitOptions()
         btnLangEn.addEventListener("click", () =>
         {
             ApplyLanguage("en");
+            OnOptionsChange();
+        });
+    }
+
+    if (inputHintMode)
+    {
+        inputHintMode.addEventListener("change", () =>
+        {
             OnOptionsChange();
         });
     }
