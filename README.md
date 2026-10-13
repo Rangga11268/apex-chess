@@ -1,115 +1,122 @@
-# ♟️ Apex Chess — Real-Time Stockfish Chess Engine & Assistant for Chess.com
+# Apex Chess: Real-Time Stockfish Analysis Extension for Chess.com
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Stockfish Engine](https://img.shields.io/badge/Engine-Stockfish%2010%2B-00F5FF.svg)](https://stockfishchess.org/)
-[![Manifest V3](https://img.shields.io/badge/Chrome%20Extension-Manifest%20V3-7A22FF.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Rangga11268/apex-chess/pulls)
+[![Engine: Stockfish](https://img.shields.io/badge/Engine-Stockfish%2010%2B-2563eb.svg)](https://stockfishchess.org/)
+[![Chrome Extension: MV3](https://img.shields.io/badge/Manifest-V3-00e5ff.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 
-**Apex Chess** is a modern, tactical, high-performance Chrome extension that provides **real-time Stockfish chess engine evaluation**, accurate move suggestions, opening theory recognition, and live analysis on **[Chess.com](https://www.chess.com)**.
+Apex Chess is a Chromium browser extension providing local Stockfish chess engine evaluations, multi-tier move recommendations, and opening recognition on [Chess.com](https://www.chess.com).
 
-Built with an **embedded offline Stockfish UCI engine Web Worker**, Apex Chess requires no external API keys or remote servers. It runs directly inside your browser with maximum speed, humanized timing, and side-locked analysis.
+Powered by an offline Web Worker build of Stockfish, Apex Chess evaluates positions locally on your machine with zero external network requests or third-party servers.
 
 <p align="center">
-    <img width="650" src="img/banner-hd.png" alt="Apex Chess HD Banner">
+  <img width="800" src="img/banner-hd.png" alt="Apex Chess Banner">
 </p>
 
----
+## Overview
 
-## 🔍 Key Search Keywords & Topics
-`chess engine` · `chess.com bot` · `stockfish chrome extension` · `chess evaluation bar` · `chess helper` · `chess move calculator` · `chess analysis assistant` · `chesscom stealth engine` · `chess opening book`
+- **Engine Core**: Stockfish 10+ UCI engine running locally inside a Web Worker.
+- **Move Classification**: Multi-level evaluation displaying Brilliant, Best, Good, Inaccuracy, Mistake, and Blunder moves.
+- **Visual Indicators**: Native board arrows and destination badges matching Chess.com design standards.
+- **Privacy First**: Fully offline execution. No user data, game data, or tokens leave your local device.
+- **Bilingual Support**: Instant live toggle between English (EN) and Bahasa Indonesia (ID).
 
----
+## Features
 
-## ✨ Features
+### Real-Time Engine Evaluation
+Positions are sent to the offline Stockfish engine upon board mutation. Calculation operates with configurable depth ceilings (depth 10 to 25) and hardware concurrency limits to keep CPU usage controlled.
 
-- ⚡ **Instant Stockfish Evaluation**: Computes moves in ~1.2s using capped `movetime` and configurable depth ceilings (depth 10–25).
-- 🎯 **Side-Lock Turn Filtering**: Hints and best-move arrows only appear on **your own turn** (`getPlayingAs() === getTurn()`). No distracting arrows during opponent turns.
-- 🛡️ **Anti-Detection Stealth (Humanized Play)**:
-  - **Dynamic Timing Jitter**: Randomized human-like thinking delay between **800ms – 2200ms**.
-  - **Rank-2 Move Randomization**: Automatically plays the 2nd-best engine move ~25% of the time to avoid suspicious 99% CAPS engine correlation.
-- 📊 **Real-Time Evaluation Bar**: Live centipawn (`+1.45`) and forced mate (`M3`) score with dynamic white/black perspective flipping.
-- 📘 **Built-In ECO Opening Book**: Recognizes 27+ classic opening lines instantly (`eco.json`) without consuming CPU cycles.
-- 🌐 **Bilingual Interface**: 1-click toggle between **Bahasa Indonesia (ID)** and **English (EN)**.
-- 🧩 **100% Offline & Private**: Uses offline WASM/ASM.js Stockfish blob workers—zero telemetry, zero external network requests.
-- ♟️ **Modern Chess.com Support**: Seamlessly hooks into both `<wc-chess-board>` and `<chess-board>` web components with automated MutationObserver fallback.
+### Turn-Locked Calculation
+Calculations and hint arrows only activate when it is your turn to move. When waiting for the opponent, board observers stay dormant to save system resources.
 
----
+### Move Quality Spectrum & Board Markings
+Apex Chess parses MultiPV engine lines to categorize available moves:
+- **Brilliant Move** (`#1BACA6`): High-value tactical sacrifices and game-changing lines, annotated with a star badge.
+- **Best Move** (`#9EBA5A`): Optimal continuation evaluated by the engine.
+- **Good / Excellent** (`#5C8BB0`): Solid positional moves maintaining equality or advantage.
+- **Inaccuracy & Mistake** (`#E6912C`): Suboptimal candidate lines.
+- **Blunder** (`#FA412D`): Tactically flawed moves to avoid.
 
-## 🚀 Installation Guide
+### Stealth Mode (Humanized Play)
+Includes optional safeguards for study and non-destructive practice:
+- **Dynamic Calculation Delay**: Adds randomized thinking time (800ms to 2200ms) before rendering moves.
+- **Candidate Move Jitter**: Randomizes selection between rank-1 and rank-2 engine lines (~25% distribution) to emulate natural human accuracy curves rather than robotic 100% CAPS precision.
 
-### Step 1: Clone Repository
+### Evaluation Bar & Opening Book
+- **Advantage Bar**: Live centipawn and forced mate counter adjusting to your active side (White or Black).
+- **ECO Opening Database**: Identifies over 27 opening systems instantly without engine compute.
+
+## Installation
+
+### Prerequisites
+- Node.js 18+ and npm
+- A Chromium-based browser (Google Chrome, Brave, Microsoft Edge, Opera, or Vivaldi)
+
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/Rangga11268/apex-chess.git
 cd apex-chess
 ```
 
-### Step 2: Install Dependencies & Build
+### 2. Install Dependencies and Build
 ```bash
 npm install
 npm run build
 ```
 
-*(You can verify all artifacts by running `npm test`)*
-
-### Step 3: Load Extension into Browser (Chrome / Brave / Edge / Opera)
-1. Open your browser and navigate to:
-   - Chrome: `chrome://extensions/`
-   - Brave: `brave://extensions/`
-   - Edge: `edge://extensions/`
-2. Enable **Developer mode** toggle in the top-right corner.
-3. Click **Load unpacked** (Muat yang belum dibongkar).
-4. Select the **`dist`** directory inside the `apex-chess` project folder (`d:\Ngoding\ChessMint\dist`).
-5. Open [Chess.com](https://www.chess.com) and start any game or analysis board!
-
----
-
-## ⚙️ Configuration & Options
-
-Click the **Apex Chess** icon in the browser toolbar to open the control panel:
-
-| Setting | Default | Description |
-| :--- | :---: | :--- |
-| **Engine Depth** | `12` | Calculation depth limit (1–25) |
-| **CPU Threads** | `2` | Web Worker hardware concurrency |
-| **Show Move Hints** | `Enabled` | Color-coded best move arrows (Only on your turn) |
-| **Move Quality Analysis** | `Enabled` | Shows move badges (*Brilliant, Best Move, Inaccuracy, Blunder*) |
-| **Evaluation Advantage Bar** | `Enabled` | Displays real-time advantage bar next to the board |
-| **Depth Progress Bar** | `Enabled` | Visual engine thinking status bar |
-| **Auto Move (Stealth Jitter)**| `Disabled` | Automatic play with 800ms–2200ms delay & 25% rank-2 move pick |
-| **Language** | `ID / EN` | Instantly switch between Indonesian and English |
-
----
-
-## 🛠️ Tech Stack & Architecture
-
-- **Engine Core**: Stockfish 10.0.2 UCI Engine compiled to Web Worker via Blob URL.
-- **Languages**: TypeScript, HTML5, CSS3.
-- **Bundler**: Webpack 5.
-- **Target Platform**: Manifest V3 (MV3) Google Chrome & Chromium browsers.
-- **DOM Integration**: Chess.com custom element prototype hooking + MutationObserver.
-
----
-
-## 🧪 Verification & Tests
-
-Run the built-in diagnostic test suite:
+Run test verification to confirm all artifacts are ready:
 ```bash
 npm test
 ```
-Ensures:
-- Manifest V3 specification compliance.
-- ECO Opening table validity.
-- Stockfish UCI engine artifact readiness.
-- JS bundle integrity and size benchmarks.
 
----
+### 3. Load the Extension into Your Browser
+1. Open your browser and visit:
+   - Chrome: `chrome://extensions/`
+   - Brave: `brave://extensions/`
+   - Edge: `edge://extensions/`
+2. Turn on **Developer mode** (toggle switch in the top-right corner).
+3. Click **Load unpacked** (or *Muat yang belum dibongkar*).
+4. Select the `dist/` folder inside the cloned `apex-chess` directory.
+5. Navigate to [Chess.com](https://www.chess.com) and start an analysis board or practice match.
 
-## ⚠️ Disclaimer & Fair Play Notice
+## Configuration
 
-This software is developed strictly for **educational, analysis, study, and offline bot-training purposes**. Using chess engines in rated competitive games against human players is strictly against the [Chess.com Fair Play Policy](https://support.chess.com/article/648-what-are-the-fair-play-policies). Please play responsibly and respect the chess community.
+Click the Apex Chess icon in your browser toolbar to configure engine behavior:
 
----
+| Setting | Default | Description |
+| :--- | :---: | :--- |
+| **Engine Depth** | `12` | Calculation depth limit (1 to 25) |
+| **CPU Threads** | `2` | Web Worker thread concurrency |
+| **Hint Mode** | `Full Spectrum` | Choose between Full Spectrum, Stealth (Humanized), or Classic Best Move |
+| **Show Move Hints** | `Enabled` | Renders color-coded arrows on your turn |
+| **Move Quality Analysis** | `Enabled` | Shows destination square badges (Brilliant, Best, Inaccuracy, Blunder) |
+| **Evaluation Advantage Bar** | `Enabled` | Displays numeric score and advantage bar beside the board |
+| **Depth Progress Bar** | `Enabled` | Shows active calculation depth progress |
+| **Language** | `EN / ID` | Switch between English and Bahasa Indonesia |
 
-## 📄 License
+## Technical Architecture
+
+- **Extension Framework**: Chrome Extension Manifest V3 (MV3)
+- **Engine Worker**: Offline Stockfish ASM.js / WebAssembly instantiated via Blob URL
+- **Languages**: TypeScript, HTML5, CSS3
+- **Bundler**: Webpack 5
+- **DOM Integration**: Direct observer hooks for both `<wc-chess-board>` and `<chess-board>` custom elements
+
+## Development & Testing
+
+Run unit checks on extension bundles, manifest schema, and engine artifacts:
+```bash
+npm test
+```
+
+Rebuild source changes during development:
+```bash
+npm run build
+```
+
+## Fair Play Notice
+
+Apex Chess is built for study, opening preparation, post-game analysis, and offline bot training. Using automated engine assistance in rated multiplayer matches against human opponents violates the [Chess.com Fair Play Policy](https://support.chess.com/article/648-what-are-the-fair-play-policies). Please use this tool responsibly and respect the chess community.
+
+## License
 
 This project is licensed under the [MIT License](LICENSE).
