@@ -240,9 +240,11 @@ class GameController
             {
                 let key = marking.type + "|";
                 if (marking.data.square != null) key += marking.data.square;
-                else key += `${marking.data.from}${marking.data.to}`;
+                else if (marking.data.from != null && marking.data.to != null) key += `${marking.data.from}${marking.data.to}`;
 
-                this.controller.markings.removeOne(key);
+                try {
+                    this.controller.markings.removeOne(key);
+                } catch (e) {}
             });
         }
         this.currentMarkings = [];
@@ -294,17 +296,17 @@ class GameController
                 }
             }
 
-            // Move category palette
+            // Official Chess.com style vibrant palette
             const movePalette = {
-                brilliant: "#1baca6", // Cyan/Teal (Chess.com Brilliant)
-                great:     "#5c8bb0", // Blue (Great Find)
-                best:      "#9eba5a", // Lime Green (Best Move)
-                excellent: "#96bc4b", // Greenish Olive (Excellent)
-                stealth:   "#00d4ff", // Electric Cyan (Anti-Cheat Stealth)
-                good:      "#96af8b", // Muted Sage (Good)
-                inaccuracy:"#f0c15c", // Yellow (Inaccuracy)
-                mistake:   "#e6912c", // Orange (Mistake)
-                blunder:   "#b33430", // Red (Blunder)
+                brilliant: "#1baca6", // Teal cyan (Brilliant sacrifice !!)
+                great:     "#5c8bb0", // Electric Blue (Great Find !)
+                best:      "#9eba5a", // Chess.com Star Green (Best Move ★)
+                excellent: "#96bc4b", // Olive Green (Excellent)
+                stealth:   "#00d4ff", // Neon Cyan (Safe Anti-Cheat Stealth)
+                good:      "#88a878", // Sage Green (Good)
+                inaccuracy:"#f0c15c", // Gold Yellow (Inaccuracy ?)
+                mistake:   "#e6912c", // Orange (Mistake ??)
+                blunder:   "#fa412d", // Vivid Crimson Red (Blunder ??)
             };
 
             const bestScore = bestMove.mate != null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp || 0);
@@ -314,7 +316,7 @@ class GameController
                 if (isBestMove && move.depth != bestMove.depth) return;
 
                 let arrowColor = movePalette.best;
-                let opacity = 0.85;
+                let opacity = 0.95;
                 let moveTypeBadge: TEffectType | null = null;
 
                 const currentScore = move.mate != null ? (move.mate > 0 ? 10000 : -10000) : (move.cp || 0);
@@ -331,12 +333,12 @@ class GameController
                     else if (idx === 0)
                     {
                         arrowColor = movePalette.best;
-                        opacity = 0.7;
+                        opacity = 0.75;
                     }
                     else
                     {
                         arrowColor = movePalette.good;
-                        opacity = 0.4;
+                        opacity = 0.45;
                     }
                 }
                 else if (hintMode === "classified")
@@ -359,31 +361,31 @@ class GameController
                     {
                         arrowColor = movePalette.excellent;
                         moveTypeBadge = "Excellent";
-                        opacity = 0.75;
+                        opacity = 0.85;
                     }
                     else if (scoreDiff <= 90)
                     {
                         arrowColor = movePalette.good;
                         moveTypeBadge = "Good";
-                        opacity = 0.65;
+                        opacity = 0.75;
                     }
                     else if (scoreDiff <= 180)
                     {
                         arrowColor = movePalette.inaccuracy;
                         moveTypeBadge = "Inaccuracy";
-                        opacity = 0.55;
+                        opacity = 0.70;
                     }
                     else if (scoreDiff <= 300)
                     {
                         arrowColor = movePalette.mistake;
                         moveTypeBadge = "Mistake";
-                        opacity = 0.5;
+                        opacity = 0.65;
                     }
                     else
                     {
                         arrowColor = movePalette.blunder;
                         moveTypeBadge = "Blunder";
-                        opacity = 0.45;
+                        opacity = 0.60;
                     }
                 }
                 else
@@ -401,32 +403,21 @@ class GameController
                         to: move.to,
                     },
                     node: true,
-                    persistent: true,
+                    persistent: false,
                     type: "arrow",
                 });
 
-                // Add badge on target square for Brilliant, BestMove, or Mate
-                if (moveTypeBadge && (moveTypeBadge === "Brilliant" || idx === 0))
+                // Add badge on target square only for the primary recommended move (idx === 0) or if explicitly Brilliant
+                if (idx === 0)
                 {
+                    const badgeType = isBrilliant ? "Brilliant" : (move.mate != null ? (move.mate < 0 ? "ResignWhite" : "WinnerWhite") : "BestMove");
                     this.currentMarkings.push({
                         data: {
                             square: move.to,
-                            type: moveTypeBadge,
+                            type: badgeType,
                         },
                         node: true,
-                        persistent: true,
-                        type: "effect",
-                    });
-                }
-                else if (move.mate != null && idx === 0)
-                {
-                    this.currentMarkings.push({
-                        data: {
-                            square: move.to,
-                            type: move.mate < 0 ? "ResignWhite" : "WinnerWhite",
-                        },
-                        node: true,
-                        persistent: true,
+                        persistent: false,
                         type: "effect",
                     });
                 }
