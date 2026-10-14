@@ -1,6 +1,6 @@
 {
   "name": "apex-chess",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Apex Chess - Real-Time Stockfish Engine Analysis, Evaluation Bar, and Assistant for Chess.com",
   "main": "dist/js/chessmint.js",
   "homepage": "https://github.com/Rangga11268/apex-chess",

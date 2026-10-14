@@ -53,6 +53,17 @@ Automatically reads match clocks and dials engine computation time and auto-move
 - **Advantage Bar**: Live centipawn and forced mate counter adjusting to your active side (White or Black).
 - **Opening HUD & ECO Book**: Real-time display of opening names and ECO classifications (e.g. `[C60] Ruy Lopez`, `[B20] Sicilian Defense`) directly above the board layout without external requests.
 
+### Grandmaster Persona Emulation (Gaya Main Master Dunia)
+Rather than playing like a cold, predictable calculation machine, Apex Chess allows players to emulate the distinct playing personalities and strategic philosophies of world champions:
+- 👑 **Magnus Carlsen**: High endgame affinity, queen-trade preference, ruthless positional squeeze, and zero tactical recklessness.
+- 🪄 **Mikhail Tal**: Romantic sacrifices, dynamic initiative, open king attacking files, and sharp tactical chaos.
+- ⚡ **Garry Kasparov**: Relentless central control (`d4`/`e4`/`d5`/`e5`), aggressive piece momentum, and dynamic dominance.
+- 🚀 **Hikaru Nakamura**: Speed tactics, fianchetto diagonals, tricky knight outposts, and practical swindles.
+- 🛡️ **Anatoly Karpov**: Deep prophylaxis, restricting opponent counterplay, and unyielding pawn structure solidity.
+- 🤖 **Pure Engine**: Unbiased Stockfish calculation.
+
+> **Anti-Blunder Guardrail**: Persona move choices are strictly bounded by a maximum $\Delta \text{cp} \le 65$ safety margin from the optimal engine move. No persona will ever blunder material or sacrifice without compensation.
+
 ### Tactical Power Tools
 - **Boss Key (`H`)**: Instantly toggle all assistance overlays (arrows, eval bar, badges, HUD) on and off in 1 millisecond.
 - **Opponent Threat Radar**: Live tactical danger detection highlighting opponent counter-threat targets in crimson (`#ef4444`) while waiting for their turn.

@@ -78,6 +78,24 @@ body.apex-stealth-hidden svg.chessmint-marking {
     font-size: 11px;
 }
 
+.apex-opening-hud .apex-persona-badge {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(245, 158, 11, 0.35));
+    border: 1px solid rgba(245, 158, 11, 0.6);
+    color: #fef08a;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.apex-opening-hud .apex-persona-badge.apex-badge-hidden {
+    display: none;
+}
+
 .apex-opening-hud .apex-eco-name {
     color: #38bdf8;
 }

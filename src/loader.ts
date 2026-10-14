@@ -15,6 +15,7 @@ const DefaultExtensionOptions2: ExtensionOptions = {
     opening_hud: true,
     threat_radar: true,
     deep_calc_enabled: true,
+    persona: "engine",
     language: "id",
 };
 

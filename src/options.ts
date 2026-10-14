@@ -11,6 +11,7 @@ var inputBossKey: HTMLInputElement;
 var inputOpeningHUD: HTMLInputElement;
 var inputThreatRadar: HTMLInputElement;
 var inputDeepCalc: HTMLInputElement;
+var inputPersona: HTMLSelectElement;
 var inputUseNNUE: HTMLInputElement;
 var btnLangId: HTMLElement | null;
 var btnLangEn: HTMLElement | null;
@@ -32,6 +33,7 @@ const DefaultExtensionOptions: ExtensionOptions = {
     opening_hud: true,
     threat_radar: true,
     deep_calc_enabled: true,
+    persona: "engine",
     language: "id",
 };
 
@@ -164,6 +166,38 @@ const Translations: { [key: string]: TranslationItem } = {
     tooltipDeepCalc: {
         id: "Tekan tombol Spasi di keyboard untuk memicu perhitungan Stockfish mendalam (depth 22) di posisi sulit.",
         en: "Press Spacebar on your keyboard to trigger a deep Stockfish search (depth 22) in complex positions."
+    },
+    labelPersona: {
+        id: "Gaya Main Grandmaster Dunia:",
+        en: "Grandmaster Playing Style:"
+    },
+    tooltipPersona: {
+        id: "Pilih gaya bermain legenda catur dunia: Magnus (Endgame/Squeeze), Tal (Pengorbanan/Serangan), Kasparov (Inisiatif/Pusat), Hikaru (Catur Kilat/Taktik), atau Karpov (Profilaksis).",
+        en: "Emulate iconic world champions: Magnus (Endgame/Squeeze), Tal (Sacrifices/Attack), Kasparov (Initiative/Center), Hikaru (Speed/Swindles), or Karpov (Prophylaxis)."
+    },
+    optPersonaEngine: {
+        id: "🤖 Apex Pure Engine (Default Stockfish)",
+        en: "🤖 Apex Pure Engine (Default Stockfish)"
+    },
+    optPersonaMagnus: {
+        id: "👑 Magnus Carlsen (Squeeze & Endgame Grind)",
+        en: "👑 Magnus Carlsen (Squeeze & Endgame Grind)"
+    },
+    optPersonaTal: {
+        id: "🪄 Mikhail Tal (Pengorbanan Liar & Serangan Raja)",
+        en: "🪄 Mikhail Tal (Wild Sacrifices & King Attack)"
+    },
+    optPersonaKasparov: {
+        id: "⚡ Garry Kasparov (Inisiatif Dinamis & Dominasi)",
+        en: "⚡ Garry Kasparov (Dynamic Initiative & Dominance)"
+    },
+    optPersonaNakamura: {
+        id: "🚀 Hikaru Nakamura (Taktik Kilat, Jebakan & Swindle)",
+        en: "🚀 Hikaru Nakamura (Speed Tactics, Traps & Swindle)"
+    },
+    optPersonaKarpov: {
+        id: "🛡️ Anatoly Karpov (Profilaksis & Cekikan Posisional)",
+        en: "🛡️ Anatoly Karpov (Prophylaxis & Positional Squeeze)"
     }
 };
 
@@ -214,6 +248,7 @@ function RestoreOptions()
         inputThreads.value = (options.threads || 2).toString();
         inputShowHints.checked = options.show_hints !== undefined ? options.show_hints : true;
         inputHintMode.value = options.hint_mode || "classified";
+        if (inputPersona) inputPersona.value = options.persona || "engine";
         inputMoveAnalysis.checked = options.move_analysis !== undefined ? options.move_analysis : true;
         inputDepthBar.checked = options.depth_bar !== undefined ? options.depth_bar : true;
         inputEvalBar.checked = options.evaluation_bar !== undefined ? options.evaluation_bar : true;
@@ -252,6 +287,7 @@ function OnOptionsChange()
         opening_hud: inputOpeningHUD.checked,
         threat_radar: inputThreatRadar.checked,
         deep_calc_enabled: inputDeepCalc.checked,
+        persona: (inputPersona && (inputPersona.value as any)) || "engine",
         language: currentLanguage,
     };
 
@@ -310,6 +346,7 @@ function InitOptions()
     inputOpeningHUD = document.getElementById("option-opening-hud") as HTMLInputElement;
     inputThreatRadar = document.getElementById("option-threat-radar") as HTMLInputElement;
     inputDeepCalc = document.getElementById("option-deep-calc") as HTMLInputElement;
+    inputPersona = document.getElementById("option-persona") as HTMLSelectElement;
 
     btnLangId = document.getElementById("lang-btn-id");
     btnLangEn = document.getElementById("lang-btn-en");
@@ -335,6 +372,14 @@ function InitOptions()
     if (inputHintMode)
     {
         inputHintMode.addEventListener("change", () =>
+        {
+            OnOptionsChange();
+        });
+    }
+
+    if (inputPersona)
+    {
+        inputPersona.addEventListener("change", () =>
         {
             OnOptionsChange();
         });

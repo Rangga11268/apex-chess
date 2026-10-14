@@ -51,6 +51,208 @@ class TopMove
     }
 }
 
+export class GrandmasterPersonaHelper
+{
+    static readonly PERSONAS: Record<TGrandmasterPersona, {
+        id: TGrandmasterPersona;
+        name: string;
+        badge: string;
+        tagline: { id: string; en: string };
+    }> = {
+        engine: {
+            id: "engine",
+            name: "Stockfish Pure",
+            badge: "🤖 Stockfish",
+            tagline: { id: "Kalkulasi engine murni tanpa bias", en: "Pure unbiased engine calculation" }
+        },
+        magnus: {
+            id: "magnus",
+            name: "Magnus Carlsen",
+            badge: "👑 Magnus",
+            tagline: { id: "Squeeze endgame & posisi bebas risiko", en: "Endgame squeeze & low-risk control" }
+        },
+        tal: {
+            id: "tal",
+            name: "Mikhail Tal",
+            badge: "🪄 Tal",
+            tagline: { id: "Serangan taktis, inisiatif & pengorbanan", en: "Tactical assault & sacrificial attack" }
+        },
+        kasparov: {
+            id: "kasparov",
+            name: "Garry Kasparov",
+            badge: "⚡ Kasparov",
+            tagline: { id: "Dominasi pusat & inisiatif dinamis", en: "Central dominance & dynamic initiative" }
+        },
+        nakamura: {
+            id: "nakamura",
+            name: "Hikaru Nakamura",
+            badge: "🚀 Nakamura",
+            tagline: { id: "Taktik kilat, jebakan tajam & swindle", en: "Speed tactics, sharp traps & swindles" }
+        },
+        karpov: {
+            id: "karpov",
+            name: "Anatoly Karpov",
+            badge: "🛡️ Karpov",
+            tagline: { id: "Profilaksis & cekikan posisional", en: "Prophylaxis & positional squeeze" }
+        }
+    };
+
+    static getPieceAt(fen: string, square: string): string | null
+    {
+        if (!fen || !square || square.length < 2) return null;
+        const file = square.charCodeAt(0) - 97; // 0..7 for a..h
+        const rank = parseInt(square[1]);       // 1..8
+        if (file < 0 || file > 7 || rank < 1 || rank > 8) return null;
+
+        const boardPart = fen.split(" ")[0];
+        const rows = boardPart.split("/");
+        const row = rows[8 - rank];
+        if (!row) return null;
+
+        let curFile = 0;
+        for (let i = 0; i < row.length; i++)
+        {
+            const char = row[i];
+            if (char >= "1" && char <= "8")
+            {
+                curFile += parseInt(char);
+            }
+            else
+            {
+                if (curFile === file) return char;
+                curFile++;
+            }
+        }
+        return null;
+    }
+
+    static countPieces(fen: string): { totalNonPawns: number; queens: number; whiteKing: string; blackKing: string }
+    {
+        let totalNonPawns = 0;
+        let queens = 0;
+        let whiteKing = "e1";
+        let blackKing = "e8";
+
+        const boardPart = (fen || "").split(" ")[0];
+        const rows = boardPart.split("/");
+        for (let r = 0; r < rows.length; r++)
+        {
+            const rank = 8 - r;
+            let file = 0;
+            const row = rows[r];
+            for (let i = 0; i < row.length; i++)
+            {
+                const ch = row[i];
+                if (ch >= "1" && ch <= "8")
+                {
+                    file += parseInt(ch);
+                }
+                else
+                {
+                    const sq = String.fromCharCode(97 + file) + rank;
+                    if (ch === "K") whiteKing = sq;
+                    else if (ch === "k") blackKing = sq;
+                    else if (ch === "Q" || ch === "q") { queens++; totalNonPawns++; }
+                    else if (ch !== "P" && ch !== "p") { totalNonPawns++; }
+                    file++;
+                }
+            }
+        }
+        return { totalNonPawns, queens, whiteKing, blackKing };
+    }
+
+    /**
+     * Evaluates a candidate move against a selected persona.
+     * Enforces the hard anti-blunder guardrail: maximum delta cp is 65.
+     */
+    static scorePersonaMove(
+        move: TopMove,
+        bestMove: TopMove,
+        persona: TGrandmasterPersona,
+        fen: string
+    ): number
+    {
+        const bestScore = bestMove.mate !== null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp ?? 0);
+        const moveScore = move.mate !== null ? (move.mate > 0 ? 10000 : -10000) : (move.cp ?? 0);
+
+        if (!persona || persona === "engine") return moveScore;
+
+        // Blunder guardrail: do not elevate moves if delta exceeds 65 cp
+        // or if bestMove is forced mate and candidate is not
+        if (bestMove.mate !== null && bestMove.mate > 0)
+        {
+            if (move.mate === null || move.mate <= 0) return moveScore;
+        }
+        const delta = bestScore - moveScore;
+        if (delta > 65) return moveScore;
+
+        let bonus = 0;
+        const targetSq = move.to;
+        const sourceSq = move.from;
+        const movingPiece = this.getPieceAt(fen, sourceSq);
+        const targetPiece = this.getPieceAt(fen, targetSq);
+        const isCapture = targetPiece !== null;
+        const turn = (fen.split(" ")[1] || "w") === "w" ? 1 : 2;
+
+        const { totalNonPawns, queens, whiteKing, blackKing } = this.countPieces(fen);
+        const enemyKing = turn === 1 ? blackKing : whiteKing;
+        const enemyKingFile = enemyKing.charCodeAt(0) - 97;
+        const enemyKingRank = parseInt(enemyKing[1]);
+
+        const targetFile = targetSq.charCodeAt(0) - 97;
+        const targetRank = parseInt(targetSq[1]);
+        const kingDist = Math.max(Math.abs(targetFile - enemyKingFile), Math.abs(targetRank - enemyKingRank));
+
+        const isDeepCenter = targetSq === "d4" || targetSq === "e4" || targetSq === "d5" || targetSq === "e5";
+        const isExtCenter = targetSq === "c4" || targetSq === "f4" || targetSq === "c5" || targetSq === "f5";
+        const isFianchetto = targetSq === "b2" || targetSq === "g2" || targetSq === "b7" || targetSq === "g7";
+        const isFlankEdge = targetSq.startsWith("a") || targetSq.startsWith("h");
+
+        switch (persona)
+        {
+            case "magnus":
+                if (totalNonPawns <= 8 || queens === 0) bonus += 20;
+                if (isCapture) bonus += 12;
+                if (isDeepCenter || isExtCenter) bonus += 8;
+                if (isFlankEdge) bonus -= 6;
+                break;
+
+            case "tal":
+                if (kingDist <= 2) bonus += 25;
+                else if (kingDist <= 3) bonus += 12;
+                if (isCapture) bonus += 14;
+                if ((turn === 1 && targetRank >= 5) || (turn === 2 && targetRank <= 4)) bonus += 10;
+                break;
+
+            case "kasparov":
+                if (isDeepCenter) bonus += 24;
+                else if (isExtCenter) bonus += 14;
+                if (movingPiece && (movingPiece.toLowerCase() === "n" || movingPiece.toLowerCase() === "b" || movingPiece.toLowerCase() === "q"))
+                {
+                    bonus += 12;
+                }
+                if (isCapture) bonus += 8;
+                break;
+
+            case "nakamura":
+                if (isFianchetto || isFlankEdge) bonus += 18;
+                if (movingPiece && movingPiece.toLowerCase() === "n") bonus += 14;
+                if (isCapture) bonus += 10;
+                if (kingDist <= 3) bonus += 10;
+                break;
+
+            case "karpov":
+                if (!isCapture && (isDeepCenter || isExtCenter)) bonus += 16;
+                if (movingPiece && (movingPiece.toLowerCase() === "r" || movingPiece.toLowerCase() === "p")) bonus += 14;
+                if (kingDist >= 4) bonus += 10;
+                break;
+        }
+
+        const cappedBonus = Math.min(45, Math.max(0, bonus));
+        return moveScore + cappedBonus;
+    }
+}
+
 class GameController
 {
     controller: ChessboardGame;
@@ -169,6 +371,8 @@ class GameController
                 this.controller.markings.removeOne(`effect|${lastMove.to}`);
             }
         }
+
+        this.updatePersonaHUD();
     }
 
     private CreateAnalysisTools()
@@ -237,9 +441,10 @@ class GameController
                 let hud = document.createElement("div");
                 hud.id = "apex-opening-hud";
                 hud.className = "apex-opening-hud apex-hud-hidden";
-                hud.innerHTML = `<span class="apex-eco-code">ECO</span><span class="apex-eco-name">Opening</span>`;
+                hud.innerHTML = `<span class="apex-persona-badge apex-badge-hidden"></span><span class="apex-eco-code">ECO</span><span class="apex-eco-name">Opening</span>`;
                 layoutMain.insertBefore(hud, layoutChessboard);
                 this.openingHUD = hud;
+                this.updatePersonaHUD();
             }
         }, 20);
     }
@@ -385,13 +590,63 @@ class GameController
         }, 2200);
     }
 
+    updatePersonaHUD()
+    {
+        if (!this.openingHUD) return;
+        const persona = this.master.options.persona || "engine";
+        const badgeEl = this.openingHUD.querySelector(".apex-persona-badge") as HTMLElement;
+        const codeEl = this.openingHUD.querySelector(".apex-eco-code") as HTMLElement;
+        const nameEl = this.openingHUD.querySelector(".apex-eco-name") as HTMLElement;
+
+        if (persona !== "engine" && GrandmasterPersonaHelper.PERSONAS[persona])
+        {
+            const p = GrandmasterPersonaHelper.PERSONAS[persona];
+            const isId = this.master.options.language === "id";
+            if (badgeEl)
+            {
+                badgeEl.textContent = p.badge;
+                badgeEl.classList.remove("apex-badge-hidden");
+            }
+            if (codeEl && (!codeEl.textContent || codeEl.textContent === "ECO")) codeEl.textContent = "PERSONA";
+            if (nameEl && (!nameEl.textContent || nameEl.textContent === "Opening"))
+            {
+                nameEl.textContent = isId ? p.tagline.id : p.tagline.en;
+            }
+            this.openingHUD.classList.remove("apex-hud-hidden");
+        }
+        else
+        {
+            if (badgeEl) badgeEl.classList.add("apex-badge-hidden");
+            if (codeEl && codeEl.textContent === "PERSONA")
+            {
+                this.openingHUD.classList.add("apex-hud-hidden");
+            }
+        }
+    }
+
     updateOpeningHUD(info: EcoOpeningInfo)
     {
         if (!this.openingHUD || this.master.options.opening_hud === false) return;
+        const persona = this.master.options.persona || "engine";
+        const badgeEl = this.openingHUD.querySelector(".apex-persona-badge") as HTMLElement;
+        const codeEl = this.openingHUD.querySelector(".apex-eco-code") as HTMLElement;
+        const nameEl = this.openingHUD.querySelector(".apex-eco-name") as HTMLElement;
+
+        if (badgeEl)
+        {
+            if (persona !== "engine" && GrandmasterPersonaHelper.PERSONAS[persona])
+            {
+                badgeEl.textContent = GrandmasterPersonaHelper.PERSONAS[persona].badge;
+                badgeEl.classList.remove("apex-badge-hidden");
+            }
+            else
+            {
+                badgeEl.classList.add("apex-badge-hidden");
+            }
+        }
+
         if (info && info.name)
         {
-            const codeEl = this.openingHUD.querySelector(".apex-eco-code");
-            const nameEl = this.openingHUD.querySelector(".apex-eco-name");
             if (codeEl) codeEl.textContent = info.eco || "ECO";
             if (nameEl) nameEl.textContent = info.name;
             this.openingHUD.classList.remove("apex-hud-hidden");
@@ -402,6 +657,24 @@ class GameController
     {
         if (this.openingHUD)
         {
+            const persona = this.master.options.persona || "engine";
+            if (persona !== "engine" && GrandmasterPersonaHelper.PERSONAS[persona])
+            {
+                const p = GrandmasterPersonaHelper.PERSONAS[persona];
+                const isId = this.master.options.language === "id";
+                const badgeEl = this.openingHUD.querySelector(".apex-persona-badge") as HTMLElement;
+                const codeEl = this.openingHUD.querySelector(".apex-eco-code") as HTMLElement;
+                const nameEl = this.openingHUD.querySelector(".apex-eco-name") as HTMLElement;
+                if (badgeEl)
+                {
+                    badgeEl.textContent = p.badge;
+                    badgeEl.classList.remove("apex-badge-hidden");
+                }
+                if (codeEl) codeEl.textContent = "PERSONA";
+                if (nameEl) nameEl.textContent = isId ? p.tagline.id : p.tagline.en;
+                this.openingHUD.classList.remove("apex-hud-hidden");
+                return;
+            }
             this.openingHUD.classList.add("apex-hud-hidden");
         }
     }
@@ -409,7 +682,11 @@ class GameController
     private checkOpeningHUD(fen: string)
     {
         if (this.master.options.opening_hud === false || !this.openingHUD) return;
-        if (!ecoTable) return;
+        if (!ecoTable)
+        {
+            this.updatePersonaHUD();
+            return;
+        }
         const shortFen = fen.split(" ").slice(0, 3).join(" ");
         const entry = ecoTable.get(shortFen);
         if (entry && entry.name)
@@ -1400,10 +1677,14 @@ class StockfishEngine
 
             if (isBestMove)
             {
-                if (this.topMoves.length > 0 && this.topMoves[0].move != move.move)
+                const hasPersona = Boolean(this.master.options.persona && this.master.options.persona !== "engine");
+                if (!hasPersona)
                 {
-                    if (index >= 0) this.topMoves.splice(index, 1);
-                    this.topMoves.unshift(move);
+                    if (this.topMoves.length > 0 && this.topMoves[0].move != move.move)
+                    {
+                        if (index >= 0) this.topMoves.splice(index, 1);
+                        this.topMoves.unshift(move);
+                    }
                 }
             }
             else
@@ -1447,9 +1728,10 @@ class StockfishEngine
 
                 const budget = this.getTimeBudget();
 
-                // Anti-cheat: 25% chance to play 2nd-best move when available (suppressed in time-trouble panic)
+                // Anti-cheat: 25% chance to play 2nd-best move when available (suppressed in time-trouble panic or when persona active)
                 // ponytail: naive flat probability; upgrade to eval-delta weighting if needed
-                const pickIndex = (!budget.forceBestMove && Math.random() < 0.25 && top_pv_moves.length > 1) ? 1 : 0;
+                const usePersona = Boolean(this.master.options.persona && this.master.options.persona !== "engine");
+                const pickIndex = (!usePersona && !budget.forceBestMove && Math.random() < 0.25 && top_pv_moves.length > 1) ? 1 : 0;
                 let chosenMove = top_pv_moves[pickIndex];
 
                 let legalMoves = typeof this.master.game.controller.getLegalMoves === "function" ?
@@ -1537,6 +1819,40 @@ class StockfishEngine
                 return b.mate < 0 ? 1 : -1;
             }
         });
+
+        const persona = this.master.options.persona;
+        if (persona && persona !== "engine" && this.topMoves.length > 1)
+        {
+            const bestMove = this.topMoves[0];
+            const fen = (typeof this.master.game.controller?.getFEN === "function") ?
+                this.master.game.controller.getFEN() : "";
+
+            const rawBestScore = bestMove.mate !== null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp ?? 0);
+
+            this.topMoves.sort((a, b) =>
+            {
+                const rawScoreA = a.mate !== null ? (a.mate > 0 ? 10000 : -10000) : (a.cp ?? 0);
+                const rawScoreB = b.mate !== null ? (b.mate > 0 ? 10000 : -10000) : (b.cp ?? 0);
+
+                const deltaA = rawBestScore - rawScoreA;
+                const deltaB = rawBestScore - rawScoreB;
+
+                const validA = deltaA <= 65 && (bestMove.mate === null || (a.mate !== null && a.mate > 0));
+                const validB = deltaB <= 65 && (bestMove.mate === null || (b.mate !== null && b.mate > 0));
+
+                if (validA && validB)
+                {
+                    const scoreA = GrandmasterPersonaHelper.scorePersonaMove(a, bestMove, persona, fen);
+                    const scoreB = GrandmasterPersonaHelper.scorePersonaMove(b, bestMove, persona, fen);
+                    return scoreB - scoreA;
+                }
+
+                if (validA && !validB) return -1;
+                if (!validA && validB) return 1;
+
+                return rawScoreB - rawScoreA;
+            });
+        }
     }
 }
 

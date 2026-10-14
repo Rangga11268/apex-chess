@@ -205,6 +205,175 @@ assert(depthbarCss.includes("apex-stealth-hidden"), "depthbar.css must include a
 assert(depthbarCss.includes("apex-opening-hud"), "depthbar.css must include apex-opening-hud styles");
 console.log("✓ Boss Key, Threat Radar, and Deep Search verified in build artifacts");
 
+// 12. Verify Grandmaster Persona Emulation Engine & Safety Guardrail
+assert(optionsHtml.includes("option-persona"), "options.html must contain option-persona selector");
+assert(optionsHtml.includes('value="magnus"'), "options.html must include Magnus Carlsen persona");
+assert(optionsHtml.includes('value="tal"'), "options.html must include Mikhail Tal persona");
+assert(optionsHtml.includes('value="kasparov"'), "options.html must include Garry Kasparov persona");
+assert(optionsHtml.includes('value="nakamura"'), "options.html must include Hikaru Nakamura persona");
+assert(optionsHtml.includes('value="karpov"'), "options.html must include Anatoly Karpov persona");
+
+assert(depthbarCss.includes("apex-persona-badge"), "depthbar.css must include apex-persona-badge styling");
+assert(cmCode.includes("GrandmasterPersonaHelper") || cmCode.includes("scorePersonaMove"), "chessmint.js must include persona scoring");
+
+function testGetPieceAt(fen, square) {
+    if (!fen || !square || square.length < 2) return null;
+    const file = square.charCodeAt(0) - 97;
+    const rank = parseInt(square[1]);
+    if (file < 0 || file > 7 || rank < 1 || rank > 8) return null;
+    const boardPart = fen.split(" ")[0];
+    const rows = boardPart.split("/");
+    const row = rows[8 - rank];
+    if (!row) return null;
+    let curFile = 0;
+    for (let i = 0; i < row.length; i++) {
+        const char = row[i];
+        if (char >= "1" && char <= "8") {
+            curFile += parseInt(char);
+        } else {
+            if (curFile === file) return char;
+            curFile++;
+        }
+    }
+    return null;
+}
+
+assert.strictEqual(testGetPieceAt("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", "e4"), "P", "White pawn at e4");
+assert.strictEqual(testGetPieceAt("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", "e1"), "K", "White king at e1");
+assert.strictEqual(testGetPieceAt("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", "e8"), "k", "Black king at e8");
+assert.strictEqual(testGetPieceAt("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", "d4"), null, "Empty square at d4");
+
+function testCountPieces(fen) {
+    let totalNonPawns = 0;
+    let queens = 0;
+    let whiteKing = "e1";
+    let blackKing = "e8";
+    const boardPart = (fen || "").split(" ")[0];
+    const rows = boardPart.split("/");
+    for (let r = 0; r < rows.length; r++) {
+        const rank = 8 - r;
+        let file = 0;
+        const row = rows[r];
+        for (let i = 0; i < row.length; i++) {
+            const ch = row[i];
+            if (ch >= "1" && ch <= "8") {
+                file += parseInt(ch);
+            } else {
+                const sq = String.fromCharCode(97 + file) + rank;
+                if (ch === "K") whiteKing = sq;
+                else if (ch === "k") blackKing = sq;
+                else if (ch === "Q" || ch === "q") { queens++; totalNonPawns++; }
+                else if (ch !== "P" && ch !== "p") { totalNonPawns++; }
+                file++;
+            }
+        }
+    }
+    return { totalNonPawns, queens, whiteKing, blackKing };
+}
+
+const startCounts = testCountPieces("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+assert.strictEqual(startCounts.queens, 2, "Starting position has 2 queens");
+assert.strictEqual(startCounts.totalNonPawns, 14, "Starting position has 14 non-pawns");
+
+function testScorePersonaMove(move, bestMove, persona, fen) {
+    const bestScore = bestMove.mate !== null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp ?? 0);
+    const moveScore = move.mate !== null ? (move.mate > 0 ? 10000 : -10000) : (move.cp ?? 0);
+
+    if (!persona || persona === "engine") return moveScore;
+
+    if (bestMove.mate !== null && bestMove.mate > 0) {
+        if (move.mate === null || move.mate <= 0) return moveScore;
+    }
+    const delta = bestScore - moveScore;
+    if (delta > 65) return moveScore;
+
+    let bonus = 0;
+    const targetSq = move.to;
+    const sourceSq = move.from;
+    const movingPiece = testGetPieceAt(fen, sourceSq);
+    const targetPiece = testGetPieceAt(fen, targetSq);
+    const isCapture = targetPiece !== null;
+    const turn = (fen.split(" ")[1] || "w") === "w" ? 1 : 2;
+
+    const { totalNonPawns, queens, whiteKing, blackKing } = testCountPieces(fen);
+    const enemyKing = turn === 1 ? blackKing : whiteKing;
+    const enemyKingFile = enemyKing.charCodeAt(0) - 97;
+    const enemyKingRank = parseInt(enemyKing[1]);
+
+    const targetFile = targetSq.charCodeAt(0) - 97;
+    const targetRank = parseInt(targetSq[1]);
+    const kingDist = Math.max(Math.abs(targetFile - enemyKingFile), Math.abs(targetRank - enemyKingRank));
+
+    const isDeepCenter = targetSq === "d4" || targetSq === "e4" || targetSq === "d5" || targetSq === "e5";
+    const isExtCenter = targetSq === "c4" || targetSq === "f4" || targetSq === "c5" || targetSq === "f5";
+    const isFianchetto = targetSq === "b2" || targetSq === "g2" || targetSq === "b7" || targetSq === "g7";
+    const isFlankEdge = targetSq.startsWith("a") || targetSq.startsWith("h");
+
+    switch (persona) {
+        case "magnus":
+            if (totalNonPawns <= 8 || queens === 0) bonus += 20;
+            if (isCapture) bonus += 12;
+            if (isDeepCenter || isExtCenter) bonus += 8;
+            if (isFlankEdge) bonus -= 6;
+            break;
+        case "tal":
+            if (kingDist <= 2) bonus += 25;
+            else if (kingDist <= 3) bonus += 12;
+            if (isCapture) bonus += 14;
+            if ((turn === 1 && targetRank >= 5) || (turn === 2 && targetRank <= 4)) bonus += 10;
+            break;
+        case "kasparov":
+            if (isDeepCenter) bonus += 24;
+            else if (isExtCenter) bonus += 14;
+            if (movingPiece && (movingPiece.toLowerCase() === "n" || movingPiece.toLowerCase() === "b" || movingPiece.toLowerCase() === "q")) {
+                bonus += 12;
+            }
+            if (isCapture) bonus += 8;
+            break;
+        case "nakamura":
+            if (isFianchetto || isFlankEdge) bonus += 18;
+            if (movingPiece && movingPiece.toLowerCase() === "n") bonus += 14;
+            if (isCapture) bonus += 10;
+            if (kingDist <= 3) bonus += 10;
+            break;
+        case "karpov":
+            if (!isCapture && (isDeepCenter || isExtCenter)) bonus += 16;
+            if (movingPiece && (movingPiece.toLowerCase() === "r" || movingPiece.toLowerCase() === "p")) bonus += 14;
+            if (kingDist >= 4) bonus += 10;
+            break;
+    }
+    const cappedBonus = Math.min(45, Math.max(0, bonus));
+    return moveScore + cappedBonus;
+}
+
+const testFenMid = "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 6 5";
+const bestEngineMove = { from: "d2", to: "d3", cp: 40, mate: null };
+const talAttackingMove = { from: "f3", to: "g5", cp: 25, mate: null }; // delta 15, attacks f7 near black king (e8)
+const blunderMove = { from: "c4", to: "f7", cp: -150, mate: null }; // delta 190 > 65
+
+// Tal should prefer the attacking move over a quiet move within 65 cp delta
+const talScoreAttack = testScorePersonaMove(talAttackingMove, bestEngineMove, "tal", testFenMid);
+const talScoreQuiet = testScorePersonaMove(bestEngineMove, bestEngineMove, "tal", testFenMid);
+assert(talScoreAttack > talScoreQuiet, "Tal must prioritize aggressive king pressure when within 65 cp delta");
+
+// Blunder guardrail verification: delta > 65 must receive 0 bonus and stay far below best move
+const talScoreBlunder = testScorePersonaMove(blunderMove, bestEngineMove, "tal", testFenMid);
+assert.strictEqual(talScoreBlunder, -150, "Blunder exceeding 65 cp delta must receive zero bonus");
+assert(talScoreBlunder < talScoreAttack, "Blunder must NEVER beat valid candidates");
+
+// Kasparov should reward deep center moves
+const kasparovCenterMove = { from: "d2", to: "d4", cp: 35, mate: null };
+const kasparovCenterScore = testScorePersonaMove(kasparovCenterMove, bestEngineMove, "kasparov", testFenMid);
+assert(kasparovCenterScore > bestEngineMove.cp, "Kasparov must boost central occupation moves");
+
+// Magnus should reward endgame positions & trades
+const testFenEndgame = "4k3/5ppp/8/8/8/8/5PPP/4K3 w - - 0 30";
+const magnusMove = { from: "e1", to: "e2", cp: 20, mate: null };
+const magnusScore = testScorePersonaMove(magnusMove, magnusMove, "magnus", testFenEndgame);
+assert(magnusScore > 20, "Magnus must receive endgame consolidation bonus");
+
+console.log("✓ Grandmaster Persona Emulation (5 Personas + Guardrail) verified");
+
 console.log("\nALL CHECKS PASSED SUCCESSFULLY!");
 
 

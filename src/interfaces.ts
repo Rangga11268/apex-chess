@@ -271,7 +271,10 @@ interface ExtensionOptions
     opening_hud?: boolean;
     threat_radar?: boolean;
     deep_calc_enabled?: boolean;
+    persona?: TGrandmasterPersona;
 }
+
+type TGrandmasterPersona = "engine" | "magnus" | "tal" | "kasparov" | "nakamura" | "karpov";
 
 interface EcoOpeningInfo
 {
