@@ -267,6 +267,17 @@ interface ExtensionOptions
     ecoUrl?: string;
     auto_move_delay?: number;
     adaptive_timing?: boolean;
+    boss_key_enabled?: boolean;
+    opening_hud?: boolean;
+    threat_radar?: boolean;
+    deep_calc_enabled?: boolean;
+}
+
+interface EcoOpeningInfo
+{
+    f: string;
+    eco?: string;
+    name?: string;
 }
 
 interface EngineTimeBudget

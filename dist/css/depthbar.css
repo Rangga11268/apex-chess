@@ -35,3 +35,74 @@
     -ms-transition: none !important;
     transition: none !important;
 }
+
+/* Stealth Mode (Boss Key 'H') */
+body.apex-stealth-hidden .board-layout-evaluation,
+body.apex-stealth-hidden .depthBarLayout,
+body.apex-stealth-hidden .apex-opening-hud,
+body.apex-stealth-hidden .apex-deep-toast,
+body.apex-stealth-hidden [class*="apex-badge"],
+body.apex-stealth-hidden svg.chessmint-marking {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Opening HUD Banner */
+.apex-opening-hud {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px;
+    margin: 4px auto 6px auto;
+    border-radius: 9999px;
+    background: rgba(11, 14, 20, 0.92);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #f1f5f9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.apex-opening-hud .apex-eco-code {
+    background: #0284c7;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.apex-opening-hud .apex-eco-name {
+    color: #38bdf8;
+}
+
+.apex-opening-hud.apex-hud-hidden {
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+}
+
+/* Deep Search Toast Notification */
+.apex-deep-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(11, 14, 20, 0.95);
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3);
+    z-index: 10000;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}

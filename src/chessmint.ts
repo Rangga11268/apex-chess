@@ -63,6 +63,10 @@ class GameController
     private evalScoreAbbreviated: HTMLElement | null;
     private currentMarkings: Marking[];
     lastAnalysisMarkings: string[];
+    private isStealthHidden: boolean;
+    private openingHUD: HTMLElement | null;
+    private deepToastTimeout: any;
+    private threatMarkings: string[];
     private master: ChessMint;
 
     constructor(master: ChessMint, chessboard: HTMLElement)
@@ -79,6 +83,12 @@ class GameController
         this.evalScoreAbbreviated = null;
         this.currentMarkings = [];
         this.lastAnalysisMarkings = [];
+        this.isStealthHidden = false;
+        this.openingHUD = null;
+        this.deepToastTimeout = null;
+        this.threatMarkings = [];
+
+        this.setupHotkeys();
 
         // Hook to update engine on every move
         if (typeof this.controller.on === "function")
@@ -134,9 +144,21 @@ class GameController
             this.depthBar = null;
         }
 
+        if (options.opening_hud && this.openingHUD == null) this.CreateAnalysisTools();
+        else if (!options.opening_hud && this.openingHUD != null)
+        {
+            this.openingHUD.remove();
+            this.openingHUD = null;
+        }
+
         if (!options.show_hints)
         {
             this.RemoveCurrentMarkings();
+        }
+
+        if (!options.threat_radar)
+        {
+            this.clearThreatMarkings();
         }
 
         if (!options.move_analysis && this.controller.markings)
@@ -208,6 +230,16 @@ class GameController
                 {
                     this.evalBar?.classList.add("evaluation-bar-flipped");
                 }
+            }
+
+            if (this.master.options.opening_hud !== false && this.openingHUD == null)
+            {
+                let hud = document.createElement("div");
+                hud.id = "apex-opening-hud";
+                hud.className = "apex-opening-hud apex-hud-hidden";
+                hud.innerHTML = `<span class="apex-eco-code">ECO</span><span class="apex-eco-name">Opening</span>`;
+                layoutMain.insertBefore(hud, layoutChessboard);
+                this.openingHUD = hud;
             }
         }, 20);
     }
@@ -291,11 +323,147 @@ class GameController
         return null;
     }
 
+    private setupHotkeys()
+    {
+        window.addEventListener("keydown", (e: KeyboardEvent) =>
+        {
+            const target = e.target as HTMLElement;
+            if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+
+            if (e.key.toLowerCase() === "h" && this.master.options.boss_key_enabled !== false)
+            {
+                this.toggleStealthMode();
+            }
+            else if (e.code === "Space" && this.master.options.deep_calc_enabled !== false)
+            {
+                e.preventDefault();
+                this.triggerDeepCalculation();
+            }
+        });
+    }
+
+    toggleStealthMode(force?: boolean)
+    {
+        this.isStealthHidden = force !== undefined ? force : !this.isStealthHidden;
+        if (this.isStealthHidden)
+        {
+            document.body.classList.add("apex-stealth-hidden");
+            this.RemoveCurrentMarkings();
+            this.ClearAnalysisMarkings();
+            this.clearThreatMarkings();
+        }
+        else
+        {
+            document.body.classList.remove("apex-stealth-hidden");
+            this.master.engine.UpdatePosition(this.getFenSafe(), false);
+        }
+    }
+
+    triggerDeepCalculation()
+    {
+        if (this.isStealthHidden) return;
+        this.showDeepToast("🚀 Deep Calc: Depth 22");
+        this.master.engine.boostEvaluation(22, 4000);
+    }
+
+    private showDeepToast(text: string)
+    {
+        let toast = document.querySelector(".apex-deep-toast") as HTMLElement;
+        if (!toast)
+        {
+            toast = document.createElement("div");
+            toast.className = "apex-deep-toast";
+            document.body.appendChild(toast);
+        }
+        toast.textContent = text;
+        toast.style.opacity = "1";
+
+        if (this.deepToastTimeout) clearTimeout(this.deepToastTimeout);
+        this.deepToastTimeout = setTimeout(() =>
+        {
+            if (toast) toast.style.opacity = "0";
+        }, 2200);
+    }
+
+    updateOpeningHUD(info: EcoOpeningInfo)
+    {
+        if (!this.openingHUD || this.master.options.opening_hud === false) return;
+        if (info && info.name)
+        {
+            const codeEl = this.openingHUD.querySelector(".apex-eco-code");
+            const nameEl = this.openingHUD.querySelector(".apex-eco-name");
+            if (codeEl) codeEl.textContent = info.eco || "ECO";
+            if (nameEl) nameEl.textContent = info.name;
+            this.openingHUD.classList.remove("apex-hud-hidden");
+        }
+    }
+
+    hideOpeningHUD()
+    {
+        if (this.openingHUD)
+        {
+            this.openingHUD.classList.add("apex-hud-hidden");
+        }
+    }
+
+    private checkOpeningHUD(fen: string)
+    {
+        if (this.master.options.opening_hud === false || !this.openingHUD) return;
+        if (!ecoTable) return;
+        const shortFen = fen.split(" ").slice(0, 3).join(" ");
+        const entry = ecoTable.get(shortFen);
+        if (entry && entry.name)
+        {
+            this.updateOpeningHUD(entry);
+        }
+        else
+        {
+            this.hideOpeningHUD();
+        }
+    }
+
+    clearThreatMarkings()
+    {
+        if (this.controller?.markings?.removeOne)
+        {
+            this.threatMarkings.forEach((key) =>
+            {
+                try { this.controller.markings.removeOne(key); } catch (e) {}
+            });
+        }
+        this.threatMarkings = [];
+    }
+
+    highlightThreat(targetSquare: string)
+    {
+        if (this.isStealthHidden || this.master.options.threat_radar === false) return;
+        if (!targetSquare || typeof this.controller?.markings?.addOne !== "function") return;
+
+        this.clearThreatMarkings();
+        try
+        {
+            this.controller.markings.addOne({
+                data: {
+                    color: "#ef4444",
+                    opacity: 0.65,
+                    square: targetSquare,
+                },
+                node: true,
+                persistent: true,
+                type: "highlight",
+            });
+            this.threatMarkings.push(`highlight|${targetSquare}`);
+        }
+        catch (e) {}
+    }
+
     private UpdateEngine(isNewGame: boolean)
     {
         let fen = this.getFenSafe();
         if (fen)
         {
+            this.clearThreatMarkings();
+            this.checkOpeningHUD(fen);
             this.master.engine.UpdatePosition(fen, isNewGame);
             this.SetCurrentDepth(0);
         }
@@ -342,6 +510,7 @@ class GameController
     {
         this.RemoveCurrentMarkings();
         this.ClearAnalysisMarkings();
+        this.clearThreatMarkings();
         if (this.evalBar)
         {
             this.evalBar.parentElement?.remove();
@@ -351,6 +520,16 @@ class GameController
         {
             this.depthBar.parentElement?.parentElement?.remove();
             this.depthBar = null;
+        }
+        if (this.openingHUD)
+        {
+            this.openingHUD.remove();
+            this.openingHUD = null;
+        }
+        if (this.deepToastTimeout)
+        {
+            clearTimeout(this.deepToastTimeout);
+            this.deepToastTimeout = null;
         }
     }
 
@@ -373,8 +552,17 @@ class GameController
                 if (currentTurn == 2) score *= -1;
                 this.SetEvaluation(score, bestMove.mate != null);
             }
+
+            // Opponent Threat Radar: highlight opponent's primary attacking target
+            if (options.threat_radar !== false && bestMove)
+            {
+                this.highlightThreat(bestMove.to);
+            }
             return;
         }
+
+        // On our turn, clear opponent threat radar highlights
+        this.clearThreatMarkings();
 
         if (options.show_hints && this.controller?.markings)
         {
@@ -886,6 +1074,18 @@ class StockfishEngine
         });
     }
 
+    boostEvaluation(targetDepth: number = 22, movetime: number = 4000): void
+    {
+        this.onReady(() =>
+        {
+            this.stopEvaluation(() =>
+            {
+                this.isEvaluating = true;
+                this.send(`go movetime ${movetime} depth ${targetDepth}`);
+            });
+        });
+    }
+
     onReady(callback: { (): void; })
     {
         if (this.ready) callback();
@@ -1067,7 +1267,7 @@ class StockfishEngine
                 if (typeof this.master.game.controller.getFEN === "function") fen = this.master.game.controller.getFEN();
                 else if (typeof (this.master.game.controller as any).getFen === "function") fen = (this.master.game.controller as any).getFen();
                 let shortFen = fen.split(" ").slice(0, 3).join(" ");
-                if (ecoTable.get(shortFen) !== true) this.isInTheory = false;
+                if (!ecoTable.has(shortFen)) this.isInTheory = false;
             }
 
             if (FENs != null) this.send(`position fen ${FENs}`);
@@ -1461,7 +1661,10 @@ function InitChessMint(chessboard: HTMLElement)
                     let table = await response.json();
                     if (Array.isArray(table))
                     {
-                        ecoTable = new Map(table.map((data: any) => [data.f, true]));
+                        ecoTable = new Map(table.map((data: any) => {
+                            const shortF = data.f ? data.f.split(" ").slice(0, 3).join(" ") : data.f;
+                            return [shortF, data];
+                        }));
                     }
                 }
                 catch (e) {}

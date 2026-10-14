@@ -7,6 +7,10 @@ var inputDepthBar: HTMLInputElement;
 var inputEvalBar: HTMLInputElement;
 var inputAutoMove: HTMLInputElement;
 var inputAdaptiveTiming: HTMLInputElement;
+var inputBossKey: HTMLInputElement;
+var inputOpeningHUD: HTMLInputElement;
+var inputThreatRadar: HTMLInputElement;
+var inputDeepCalc: HTMLInputElement;
 var inputUseNNUE: HTMLInputElement;
 var btnLangId: HTMLElement | null;
 var btnLangEn: HTMLElement | null;
@@ -24,6 +28,10 @@ const DefaultExtensionOptions: ExtensionOptions = {
     use_nnue: false,
     auto_move: false,
     adaptive_timing: true,
+    boss_key_enabled: true,
+    opening_hud: true,
+    threat_radar: true,
+    deep_calc_enabled: true,
     language: "id",
 };
 
@@ -124,6 +132,38 @@ const Translations: { [key: string]: TranslationItem } = {
     tooltipAdaptiveTiming: {
         id: "Otomatis mempercepat reaksi engine & jalan otomatis saat bermain Bullet (1m) & Blitz (3m/5m), dan normalkan saat Rapid/Bot.",
         en: "Automatically speeds up engine thinking & auto-play for Bullet (1m) & Blitz (3m/5m), keeping normal timing for Rapid/Bots."
+    },
+    labelBossKey: {
+        id: "Tombol Rahasia / Boss Key ('H')",
+        en: "Stealth Boss Key ('H')"
+    },
+    tooltipBossKey: {
+        id: "Tekan tombol H di keyboard untuk menyembunyikan atau memunculkan seluruh bantuan visual seketika (1ms).",
+        en: "Press H key on your keyboard to instantly hide or reveal all visual overlays in 1ms."
+    },
+    labelOpeningHUD: {
+        id: "HUD Nama Pembukaan (ECO Book)",
+        en: "Opening Name HUD (ECO Book)"
+    },
+    tooltipOpeningHUD: {
+        id: "Tampilkan nama pembukaan catur resmi dan kode ECO (misal Sicilian, Ruy Lopez) di atas papan catur.",
+        en: "Display official opening names and ECO codes (e.g. Sicilian, Ruy Lopez) directly above the board."
+    },
+    labelThreatRadar: {
+        id: "Radar Ancaman Lawan (Threat Radar)",
+        en: "Opponent Threat Radar"
+    },
+    tooltipThreatRadar: {
+        id: "Tandai kotak atau perwira Anda yang sedang diancam oleh taktik serangan terbaik lawan.",
+        en: "Highlight vulnerable squares or pieces currently targeted by opponent counter-threats."
+    },
+    labelDeepCalc: {
+        id: "Hitung Mendalam Cepat ('Spacebar')",
+        en: "On-Demand Deep Calc ('Spacebar')"
+    },
+    tooltipDeepCalc: {
+        id: "Tekan tombol Spasi di keyboard untuk memicu perhitungan Stockfish mendalam (depth 22) di posisi sulit.",
+        en: "Press Spacebar on your keyboard to trigger a deep Stockfish search (depth 22) in complex positions."
     }
 };
 
@@ -180,6 +220,10 @@ function RestoreOptions()
         inputUseNNUE.checked = options.use_nnue || false;
         inputAutoMove.checked = options.auto_move || false;
         inputAdaptiveTiming.checked = options.adaptive_timing !== undefined ? options.adaptive_timing : true;
+        inputBossKey.checked = options.boss_key_enabled !== undefined ? options.boss_key_enabled : true;
+        inputOpeningHUD.checked = options.opening_hud !== undefined ? options.opening_hud : true;
+        inputThreatRadar.checked = options.threat_radar !== undefined ? options.threat_radar : true;
+        inputDeepCalc.checked = options.deep_calc_enabled !== undefined ? options.deep_calc_enabled : true;
 
         currentLanguage = options.language === "en" ? "en" : "id";
         ApplyLanguage(currentLanguage);
@@ -204,6 +248,10 @@ function OnOptionsChange()
         use_nnue: inputUseNNUE.checked,
         auto_move: inputAutoMove.checked,
         adaptive_timing: inputAdaptiveTiming.checked,
+        boss_key_enabled: inputBossKey.checked,
+        opening_hud: inputOpeningHUD.checked,
+        threat_radar: inputThreatRadar.checked,
+        deep_calc_enabled: inputDeepCalc.checked,
         language: currentLanguage,
     };
 
@@ -258,6 +306,10 @@ function InitOptions()
     inputUseNNUE = document.getElementById("option-use-nnue") as HTMLInputElement;
     inputAutoMove = document.getElementById("option-auto-move") as HTMLInputElement;
     inputAdaptiveTiming = document.getElementById("option-adaptive-timing") as HTMLInputElement;
+    inputBossKey = document.getElementById("option-boss-key") as HTMLInputElement;
+    inputOpeningHUD = document.getElementById("option-opening-hud") as HTMLInputElement;
+    inputThreatRadar = document.getElementById("option-threat-radar") as HTMLInputElement;
+    inputDeepCalc = document.getElementById("option-deep-calc") as HTMLInputElement;
 
     btnLangId = document.getElementById("lang-btn-id");
     btnLangEn = document.getElementById("lang-btn-en");

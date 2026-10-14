@@ -51,7 +51,12 @@ Automatically reads match clocks and dials engine computation time and auto-move
 
 ### Evaluation Bar & Opening Book
 - **Advantage Bar**: Live centipawn and forced mate counter adjusting to your active side (White or Black).
-- **ECO Opening Database**: Identifies over 27 opening systems instantly without engine compute.
+- **Opening HUD & ECO Book**: Real-time display of opening names and ECO classifications (e.g. `[C60] Ruy Lopez`, `[B20] Sicilian Defense`) directly above the board layout without external requests.
+
+### Tactical Power Tools
+- **Boss Key (`H`)**: Instantly toggle all assistance overlays (arrows, eval bar, badges, HUD) on and off in 1 millisecond.
+- **Opponent Threat Radar**: Live tactical danger detection highlighting opponent counter-threat targets in crimson (`#ef4444`) while waiting for their turn.
+- **On-Demand Deep Calculation (`Spacebar`)**: Instant deep search override (depth 22, 4000ms budget) for complex positions with status badge.
 
 ## Installation
 

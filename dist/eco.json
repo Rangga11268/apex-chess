@@ -1,83 +1,137 @@
 [
   {
-    "f": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq",
+    "eco": "A00",
+    "name": "Starting Position"
   },
   {
-    "f": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq"
+    "f": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq",
+    "eco": "B00",
+    "name": "King's Pawn Opening"
   },
   {
-    "f": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq",
+    "eco": "C20",
+    "name": "Open Game"
   },
   {
-    "f": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq"
+    "f": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq",
+    "eco": "C40",
+    "name": "King's Knight Opening"
   },
   {
-    "f": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq"
+    "f": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq",
+    "eco": "C44",
+    "name": "King's Pawn Game"
   },
   {
-    "f": "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq"
+    "f": "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq",
+    "eco": "C60",
+    "name": "Ruy Lopez"
   },
   {
-    "f": "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq"
+    "f": "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq",
+    "eco": "C50",
+    "name": "Italian Game"
   },
   {
-    "f": "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq",
+    "eco": "B20",
+    "name": "Sicilian Defense"
   },
   {
-    "f": "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq"
+    "f": "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq",
+    "eco": "B27",
+    "name": "Sicilian Defense (Open)"
   },
   {
-    "f": "rnbqkbnr/pp2pppp/3p2/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq"
+    "f": "rnbqkbnr/pp2pppp/3p2/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq",
+    "eco": "B50",
+    "name": "Sicilian Defense"
   },
   {
-    "f": "rnbqkbnr/pp2pppp/3p2/2p5/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq"
+    "f": "rnbqkbnr/pp2pppp/3p2/2p5/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq",
+    "eco": "B53",
+    "name": "Sicilian Defense: Chekhover"
   },
   {
-    "f": "rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq",
+    "eco": "B10",
+    "name": "Caro-Kann Defense"
   },
   {
-    "f": "rnbqkbnr/pp1ppppp/2p5/8/3PP3/8/PPP2PPP/RNBQKBNR b KQkq"
+    "f": "rnbqkbnr/pp1ppppp/2p5/8/3PP3/8/PPP2PPP/RNBQKBNR b KQkq",
+    "eco": "B12",
+    "name": "Caro-Kann: Main Line"
   },
   {
-    "f": "rnbqkbnr/pppp1ppp/4p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/pppp1ppp/4p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq",
+    "eco": "C00",
+    "name": "French Defense"
   },
   {
-    "f": "rnbqkbnr/pppp1ppp/4p5/8/3PP3/8/PPP2PPP/RNBQKBNR b KQkq"
+    "f": "rnbqkbnr/pppp1ppp/4p5/8/3PP3/8/PPP2PPP/RNBQKBNR b KQkq",
+    "eco": "C00",
+    "name": "French Defense: Normal"
   },
   {
-    "f": "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq",
+    "eco": "B01",
+    "name": "Scandinavian Defense"
   },
   {
-    "f": "rnbqkbnr/pppppp1p/6p1/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/pppppp1p/6p1/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq",
+    "eco": "B06",
+    "name": "Modern Defense"
   },
   {
-    "f": "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq"
+    "f": "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq",
+    "eco": "A40",
+    "name": "Queen's Pawn Opening"
   },
   {
-    "f": "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq",
+    "eco": "D00",
+    "name": "Queen's Pawn Game"
   },
   {
-    "f": "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq"
+    "f": "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq",
+    "eco": "D06",
+    "name": "Queen's Gambit"
   },
   {
-    "f": "rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq"
+    "f": "rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq",
+    "eco": "A45",
+    "name": "Indian Defense"
   },
   {
-    "f": "rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR b KQkq"
+    "f": "rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR b KQkq",
+    "eco": "A50",
+    "name": "Indian Defense: Normal"
   },
   {
-    "f": "rnbqkb1r/pppppp1p/5np1/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq"
+    "f": "rnbqkb1r/pppppp1p/5np1/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq",
+    "eco": "E60",
+    "name": "King's Indian Defense"
   },
   {
-    "f": "rnbqkb1r/pppppp1p/5np1/8/2PP4/5N2/PP2PPPP/RNBQKB1R b KQkq"
+    "f": "rnbqkb1r/pppppp1p/5np1/8/2PP4/5N2/PP2PPPP/RNBQKB1R b KQkq",
+    "eco": "E60",
+    "name": "King's Indian: Normal"
   },
   {
-    "f": "rnbqkbnr/pppppppp/8/8/2P4/8/PP1PPPPP/RNBQKBNR b KQkq"
+    "f": "rnbqkbnr/pppppppp/8/8/2P4/8/PP1PPPPP/RNBQKBNR b KQkq",
+    "eco": "A10",
+    "name": "English Opening"
   },
   {
-    "f": "rnbqkbnr/pppp1ppp/8/4p3/2P4/8/PP1PPPPP/RNBQKBNR w KQkq"
+    "f": "rnbqkbnr/pppp1ppp/8/4p3/2P4/8/PP1PPPPP/RNBQKBNR w KQkq",
+    "eco": "A20",
+    "name": "English: King's English"
   },
   {
-    "f": "rnbqkb1r/pppppppp/5n2/8/5P2/8/PPPPP1PP/RNBQKBNR b KQkq"
+    "f": "rnbqkb1r/pppppppp/5n2/8/5P2/8/PPPPP1PP/RNBQKBNR b KQkq",
+    "eco": "A02",
+    "name": "Bird's Opening"
   }
 ]

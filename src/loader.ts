@@ -11,6 +11,10 @@ const DefaultExtensionOptions2: ExtensionOptions = {
     use_nnue: false,
     auto_move: false,
     adaptive_timing: true,
+    boss_key_enabled: true,
+    opening_hud: true,
+    threat_radar: true,
+    deep_calc_enabled: true,
     language: "id",
 };
 

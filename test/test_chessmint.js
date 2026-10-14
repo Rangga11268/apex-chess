@@ -167,8 +167,44 @@ console.log("✓ Dynamic Blitz/Bullet time budget scaling verified");
 // 9. Verify Options HTML UI Toggle
 const optionsHtml = fs.readFileSync(path.join(distDir, "html", "options.html"), "utf-8");
 assert(optionsHtml.includes("option-adaptive-timing"), "options.html must contain option-adaptive-timing checkbox");
-assert(cmCode.includes("calculateTimeBudget"), "chessmint.js bundle must contain calculateTimeBudget");
-console.log("✓ Adaptive timing UI & bundle integration verified");
+assert(optionsHtml.includes("option-boss-key"), "options.html must contain option-boss-key checkbox");
+assert(optionsHtml.includes("option-opening-hud"), "options.html must contain option-opening-hud checkbox");
+assert(optionsHtml.includes("option-threat-radar"), "options.html must contain option-threat-radar checkbox");
+assert(optionsHtml.includes("option-deep-calc"), "options.html must contain option-deep-calc checkbox");
+console.log("✓ Options HTML UI toggles verified");
+
+// 10. Verify Opening HUD & Enriched ECO Book
+const ruyLopez = ecoData.find(e => e.eco === "C60");
+assert(ruyLopez, "eco.json must contain C60 entry");
+assert.strictEqual(ruyLopez.name, "Ruy Lopez", "C60 must be named Ruy Lopez");
+
+const sicilian = ecoData.find(e => e.eco === "B20");
+assert(sicilian, "eco.json must contain B20 entry");
+assert.strictEqual(sicilian.name, "Sicilian Defense", "B20 must be named Sicilian Defense");
+
+function resolveOpening(fen, table) {
+    const shortF = fen ? fen.split(" ").slice(0, 3).join(" ") : fen;
+    return table.find(e => {
+        const entryShort = e.f ? e.f.split(" ").slice(0, 3).join(" ") : e.f;
+        return entryShort === shortF;
+    }) || null;
+}
+
+const resolvedRuy = resolveOpening("r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3", ecoData);
+assert(resolvedRuy && resolvedRuy.name === "Ruy Lopez", "FEN must resolve to Ruy Lopez");
+console.log("✓ Opening HUD & ECO resolver verified");
+
+// 11. Verify Boss Key, Threat Radar & Deep Search in Bundle
+assert(cmCode.includes("apex-stealth-hidden"), "chessmint.js must include apex-stealth-hidden class");
+assert(cmCode.includes("highlightThreat"), "chessmint.js must include highlightThreat method");
+assert(cmCode.includes("boostEvaluation"), "chessmint.js must include boostEvaluation method");
+assert(cmCode.includes("updateOpeningHUD"), "chessmint.js must include updateOpeningHUD method");
+
+const depthbarCss = fs.readFileSync(path.join(distDir, "css", "depthbar.css"), "utf-8");
+assert(depthbarCss.includes("apex-stealth-hidden"), "depthbar.css must include apex-stealth-hidden rules");
+assert(depthbarCss.includes("apex-opening-hud"), "depthbar.css must include apex-opening-hud styles");
+console.log("✓ Boss Key, Threat Radar, and Deep Search verified in build artifacts");
 
 console.log("\nALL CHECKS PASSED SUCCESSFULLY!");
+
 

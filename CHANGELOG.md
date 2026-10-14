@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-10-14
+
+### Added
+- **Boss Key / Stealth Hotkey (`H`)**: Instant toggle hiding/unhiding all engine visual overlays (eval bar, arrows, badges, HUD) in 1ms.
+- **Opening HUD & ECO Book Toast**: Real-time display of opening names and ECO classifications (e.g. `[C60] Ruy Lopez`, `[B20] Sicilian Defense`) directly above the board layout using local `eco.json`.
+- **Opponent Threat Radar**: Live tactical danger detection highlighting opponent attack destinations in crimson (`#ef4444`) while waiting for their turn.
+- **On-Demand Deep Calculation (`Spacebar`)**: Instant search boost triggering depth 22 (4000ms budget) for complex tactical positions with progress badge indicator.
+
 ## [2.0.0] - 2026-10-14
 
 ### Added
