@@ -122,18 +122,18 @@ console.log("✓ Clock parser verified");
 
 function calculateTimeBudget(remainingSec, userDepth = 15) {
     if (remainingSec === null || remainingSec > 340) {
-        return { movetime: 1200, depthCap: userDepth, minDelay: 800, maxDelay: 2200, forceBestMove: false };
+        return { movetime: 1200, depthCap: userDepth, minDelay: 2200, maxDelay: 5200, forceBestMove: false, remainingSec };
     }
     if (remainingSec < 10) {
-        return { movetime: 60, depthCap: Math.min(userDepth, 6), minDelay: 30, maxDelay: 80, forceBestMove: true };
+        return { movetime: 60, depthCap: Math.min(userDepth, 6), minDelay: 60, maxDelay: 180, forceBestMove: true, remainingSec };
     }
     if (remainingSec <= 70) {
-        return { movetime: 120, depthCap: Math.min(userDepth, 8), minDelay: 80, maxDelay: 220, forceBestMove: false };
+        return { movetime: 120, depthCap: Math.min(userDepth, 8), minDelay: 250, maxDelay: 650, forceBestMove: false, remainingSec };
     }
     if (remainingSec <= 200) {
-        return { movetime: 350, depthCap: Math.min(userDepth, 9), minDelay: 200, maxDelay: 450, forceBestMove: false };
+        return { movetime: 350, depthCap: Math.min(userDepth, 9), minDelay: 800, maxDelay: 1800, forceBestMove: false, remainingSec };
     }
-    return { movetime: 650, depthCap: Math.min(userDepth, 11), minDelay: 400, maxDelay: 850, forceBestMove: false };
+    return { movetime: 650, depthCap: Math.min(userDepth, 11), minDelay: 1200, maxDelay: 2800, forceBestMove: false, remainingSec };
 }
 
 // Untimed / Rapid / Bot
@@ -141,27 +141,36 @@ const rapid = calculateTimeBudget(600, 15);
 assert.strictEqual(rapid.movetime, 1200, "Rapid should use standard 1200ms movetime");
 assert.strictEqual(rapid.depthCap, 15, "Rapid should preserve full user depth");
 assert.strictEqual(rapid.forceBestMove, false, "Rapid should allow anti-cheat randomization");
+assert.strictEqual(rapid.minDelay, 2200, "Rapid minDelay should be 2200ms");
+assert.strictEqual(rapid.maxDelay, 5200, "Rapid maxDelay should be 5200ms");
 
 // 5-min Blitz (~300s)
 const blitz5 = calculateTimeBudget(300, 15);
 assert.strictEqual(blitz5.movetime, 650, "5m Blitz should use 650ms movetime");
 assert.strictEqual(blitz5.depthCap, 11, "5m Blitz should cap depth at 11");
+assert.strictEqual(blitz5.minDelay, 1200, "5m Blitz minDelay should be 1200ms");
+assert.strictEqual(blitz5.maxDelay, 2800, "5m Blitz maxDelay should be 2800ms");
 
 // 3-min Blitz (~180s)
 const blitz3 = calculateTimeBudget(180, 15);
 assert.strictEqual(blitz3.movetime, 350, "3m Blitz should use 350ms movetime");
 assert.strictEqual(blitz3.depthCap, 9, "3m Blitz should cap depth at 9");
+assert.strictEqual(blitz3.minDelay, 800, "3m Blitz minDelay should be 800ms");
+assert.strictEqual(blitz3.maxDelay, 1800, "3m Blitz maxDelay should be 1800ms");
 
 // 1-min Bullet (~60s)
 const bullet1 = calculateTimeBudget(60, 15);
 assert.strictEqual(bullet1.movetime, 120, "1m Bullet should use 120ms movetime");
 assert.strictEqual(bullet1.depthCap, 8, "1m Bullet should cap depth at 8");
-assert(bullet1.minDelay <= 100 && bullet1.maxDelay <= 250, "1m Bullet should have quick auto-move delay");
+assert.strictEqual(bullet1.minDelay, 250, "1m Bullet minDelay should be 250ms");
+assert.strictEqual(bullet1.maxDelay, 650, "1m Bullet maxDelay should be 650ms");
 
 // Panic mode (<10s)
 const panic = calculateTimeBudget(6, 15);
 assert.strictEqual(panic.movetime, 60, "Panic mode should react in 60ms");
 assert.strictEqual(panic.forceBestMove, true, "Panic mode must force best move to prevent flag loss");
+assert.strictEqual(panic.minDelay, 60, "Panic minDelay should be 60ms");
+assert.strictEqual(panic.maxDelay, 180, "Panic maxDelay should be 180ms");
 console.log("✓ Dynamic Blitz/Bullet time budget scaling verified");
 
 // 9. Verify Options HTML UI Toggle

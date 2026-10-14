@@ -290,4 +290,5 @@ interface EngineTimeBudget
     minDelay: number;
     maxDelay: number;
     forceBestMove: boolean;
+    remainingSec?: number | null;
 }

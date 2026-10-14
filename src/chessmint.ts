@@ -1364,15 +1364,16 @@ class StockfishEngine
 
     static calculateTimeBudget(remainingSec: number | null, userDepth: number = 12): EngineTimeBudget
     {
-        // 1. Untimed / Rapid / Classical (> 340s or clock not active/null)
+        // 1. Untimed / Rapid / Classical (> 340s or clock not active/null, e.g. 10m)
         if (remainingSec === null || remainingSec > 340)
         {
             return {
                 movetime: 1200,
                 depthCap: userDepth,
-                minDelay: 800,
-                maxDelay: 2200,
+                minDelay: 2200,
+                maxDelay: 5200,
                 forceBestMove: false,
+                remainingSec,
             };
         }
 
@@ -1382,9 +1383,10 @@ class StockfishEngine
             return {
                 movetime: 60,
                 depthCap: Math.min(userDepth, 6),
-                minDelay: 30,
-                maxDelay: 80,
+                minDelay: 60,
+                maxDelay: 180,
                 forceBestMove: true,
+                remainingSec,
             };
         }
 
@@ -1394,9 +1396,10 @@ class StockfishEngine
             return {
                 movetime: 120,
                 depthCap: Math.min(userDepth, 8),
-                minDelay: 80,
-                maxDelay: 220,
+                minDelay: 250,
+                maxDelay: 650,
                 forceBestMove: false,
+                remainingSec,
             };
         }
 
@@ -1406,9 +1409,10 @@ class StockfishEngine
             return {
                 movetime: 350,
                 depthCap: Math.min(userDepth, 9),
-                minDelay: 200,
-                maxDelay: 450,
+                minDelay: 800,
+                maxDelay: 1800,
                 forceBestMove: false,
+                remainingSec,
             };
         }
 
@@ -1416,9 +1420,10 @@ class StockfishEngine
         return {
             movetime: 650,
             depthCap: Math.min(userDepth, 11),
-            minDelay: 400,
-            maxDelay: 850,
+            minDelay: 1200,
+            maxDelay: 2800,
             forceBestMove: false,
+            remainingSec,
         };
     }
 
@@ -1430,9 +1435,10 @@ class StockfishEngine
             return {
                 movetime: 1200,
                 depthCap: userDepth,
-                minDelay: 800,
-                maxDelay: 2200,
+                minDelay: 2200,
+                maxDelay: 5200,
                 forceBestMove: false,
+                remainingSec: null,
             };
         }
 
@@ -1837,11 +1843,40 @@ class StockfishEngine
 
                 const budget = this.getTimeBudget();
 
-                // Anti-cheat: 25% chance to play 2nd-best move when available (suppressed in time-trouble panic or when persona active)
-                // ponytail: naive flat probability; upgrade to eval-delta weighting if needed
+                // Anti-cheat: Humanized accuracy calibration (~88-92% Master curve) when in pure engine mode
                 const usePersona = Boolean(this.master.options.persona && this.master.options.persona !== "engine");
-                const pickIndex = (!usePersona && !budget.forceBestMove && Math.random() < 0.25 && top_pv_moves.length > 1) ? 1 : 0;
-                let chosenMove = top_pv_moves[pickIndex];
+                let chosenMove = top_pv_moves[0];
+
+                if (!usePersona && !budget.forceBestMove && top_pv_moves.length > 1)
+                {
+                    const m0 = top_pv_moves[0];
+                    const score0 = m0.mate !== null ? (m0.mate > 0 ? 10000 : -10000) : (m0.cp ?? 0);
+
+                    // If m0 is a winning forced mate, always play it
+                    if (m0.mate === null || m0.mate <= 0)
+                    {
+                        const m1 = top_pv_moves[1];
+                        const score1 = m1.mate !== null ? (m1.mate > 0 ? 10000 : -10000) : (m1.cp ?? 0);
+                        const delta1 = score0 - score1;
+                        const m1Sound = delta1 <= 32 && (m1.mate === null || m1.mate > 0);
+
+                        const m2 = top_pv_moves[2];
+                        const score2 = m2 ? (m2.mate !== null ? (m2.mate > 0 ? 10000 : -10000) : (m2.cp ?? 0)) : null;
+                        const delta2 = score2 !== null ? (score0 - score2) : 999;
+                        const m2Sound = delta2 <= 48 && (m2 && (m2.mate === null || m2.mate > 0));
+
+                        // Realistic human Master distribution: ~55% Best Move, ~32% Excellent (#2), ~13% Good (#3)
+                        const roll = Math.random();
+                        if (roll > 0.87 && m2Sound)
+                        {
+                            chosenMove = m2;
+                        }
+                        else if (roll > 0.55 && m1Sound)
+                        {
+                            chosenMove = m1;
+                        }
+                    }
+                }
 
                 let legalMoves = typeof this.master.game.controller.getLegalMoves === "function" ?
                     this.master.game.controller.getLegalMoves() : [];
@@ -1868,10 +1903,40 @@ class StockfishEngine
                     if (finalMove.promotion != null)
                         moveData.promotion = finalMove.promotion;
 
-                    // Adaptive delay based on time control, or user-configured fixed override
-                    const delayRange = Math.max(10, budget.maxDelay - budget.minDelay);
-                    const delay = this.master.options.auto_move_delay ||
-                        (Math.floor(Math.random() * delayRange) + budget.minDelay);
+                    // 1. Detect if this move is an immediate recapture on opponent's destination square
+                    const lastOpponentMove = typeof (this.master.game.controller as any)?.getLastMove === "function" ?
+                        (this.master.game.controller as any).getLastMove() : null;
+                    const isRecapture = Boolean(lastOpponentMove && finalMove.to === lastOpponentMove.to);
+
+                    // 2. Human contemplation pause: every few moves (approx 25% of turns) on non-recaptures, human pauses to think deeply
+                    const shouldContemplate = !budget.forceBestMove && !isRecapture && (Math.random() < 0.25);
+
+                    let delay = 0;
+                    if (this.master.options.auto_move_delay)
+                    {
+                        delay = this.master.options.auto_move_delay;
+                    }
+                    else if (isRecapture && !budget.forceBestMove)
+                    {
+                        // Fast instinctive recapture: 40-70% of base minDelay
+                        delay = Math.floor(budget.minDelay * 0.45 + Math.random() * (budget.minDelay * 0.35));
+                    }
+                    else
+                    {
+                        const delayRange = Math.max(10, budget.maxDelay - budget.minDelay);
+                        delay = Math.floor(Math.random() * delayRange) + budget.minDelay;
+                        if (shouldContemplate)
+                        {
+                            // Add thoughtful pause proportional to time control
+                            // 10m: +2000 to 4500ms | 5m: +1000 to 2200ms | 3m: +500 to 1200ms
+                            const pauseBoost = (budget.remainingSec && budget.remainingSec <= 200) ?
+                                Math.floor(Math.random() * 700 + 500) :
+                                ((budget.remainingSec && budget.remainingSec <= 340) ?
+                                    Math.floor(Math.random() * 1200 + 1000) :
+                                    Math.floor(Math.random() * 2500 + 2000));
+                            delay += pauseBoost;
+                        }
+                    }
                     this.autoMoveTimeout = setTimeout(() =>
                     {
                         this.autoMoveTimeout = null;
