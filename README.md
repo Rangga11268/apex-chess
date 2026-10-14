@@ -55,12 +55,12 @@ Automatically reads match clocks and dials engine computation time and auto-move
 
 ### Grandmaster Persona Emulation (Gaya Main Master Dunia)
 Rather than playing like a cold, predictable calculation machine, Apex Chess allows players to emulate the distinct playing personalities and strategic philosophies of world champions:
-- 👑 **Magnus Carlsen**: High endgame affinity, queen-trade preference, ruthless positional squeeze, and zero tactical recklessness.
-- 🪄 **Mikhail Tal**: Romantic sacrifices, dynamic initiative, open king attacking files, and sharp tactical chaos.
-- ⚡ **Garry Kasparov**: Relentless central control (`d4`/`e4`/`d5`/`e5`), aggressive piece momentum, and dynamic dominance.
-- 🚀 **Hikaru Nakamura**: Speed tactics, fianchetto diagonals, tricky knight outposts, and practical swindles.
-- 🛡️ **Anatoly Karpov**: Deep prophylaxis, restricting opponent counterplay, and unyielding pawn structure solidity.
-- 🤖 **Pure Engine**: Unbiased Stockfish calculation.
+- **Magnus Carlsen**: High endgame affinity, queen-trade preference, ruthless positional squeeze, and zero tactical recklessness.
+- **Mikhail Tal**: Romantic sacrifices, dynamic initiative, open king attacking files, and sharp tactical chaos.
+- **Garry Kasparov**: Relentless central control (`d4`/`e4`/`d5`/`e5`), aggressive piece momentum, and dynamic dominance.
+- **Hikaru Nakamura**: Speed tactics, fianchetto diagonals, tricky knight outposts, and practical swindles.
+- **Anatoly Karpov**: Deep prophylaxis, restricting opponent counterplay, and unyielding pawn structure solidity.
+- **Stockfish Pure**: Unbiased engine calculation.
 
 > **Anti-Blunder Guardrail**: Persona move choices are strictly bounded by a maximum $\Delta \text{cp} \le 65$ safety margin from the optimal engine move. No persona will ever blunder material or sacrifice without compensation.
 

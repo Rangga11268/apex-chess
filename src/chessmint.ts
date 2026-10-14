@@ -62,37 +62,37 @@ export class GrandmasterPersonaHelper
         engine: {
             id: "engine",
             name: "Stockfish Pure",
-            badge: "🤖 Stockfish",
+            badge: "Stockfish",
             tagline: { id: "Kalkulasi engine murni tanpa bias", en: "Pure unbiased engine calculation" }
         },
         magnus: {
             id: "magnus",
             name: "Magnus Carlsen",
-            badge: "👑 Magnus",
+            badge: "GM Carlsen",
             tagline: { id: "Squeeze endgame & posisi bebas risiko", en: "Endgame squeeze & low-risk control" }
         },
         tal: {
             id: "tal",
             name: "Mikhail Tal",
-            badge: "🪄 Tal",
+            badge: "GM Tal",
             tagline: { id: "Serangan taktis, inisiatif & pengorbanan", en: "Tactical assault & sacrificial attack" }
         },
         kasparov: {
             id: "kasparov",
             name: "Garry Kasparov",
-            badge: "⚡ Kasparov",
+            badge: "GM Kasparov",
             tagline: { id: "Dominasi pusat & inisiatif dinamis", en: "Central dominance & dynamic initiative" }
         },
         nakamura: {
             id: "nakamura",
             name: "Hikaru Nakamura",
-            badge: "🚀 Nakamura",
+            badge: "GM Nakamura",
             tagline: { id: "Taktik kilat, jebakan tajam & swindle", en: "Speed tactics, sharp traps & swindles" }
         },
         karpov: {
             id: "karpov",
             name: "Anatoly Karpov",
-            badge: "🛡️ Karpov",
+            badge: "GM Karpov",
             tagline: { id: "Profilaksis & cekikan posisional", en: "Prophylaxis & positional squeeze" }
         }
     };

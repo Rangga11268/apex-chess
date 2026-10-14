@@ -176,28 +176,28 @@ const Translations: { [key: string]: TranslationItem } = {
         en: "Emulate iconic world champions: Magnus (Endgame/Squeeze), Tal (Sacrifices/Attack), Kasparov (Initiative/Center), Hikaru (Speed/Swindles), or Karpov (Prophylaxis)."
     },
     optPersonaEngine: {
-        id: "🤖 Apex Pure Engine (Default Stockfish)",
-        en: "🤖 Apex Pure Engine (Default Stockfish)"
+        id: "Stockfish Murni (Engine Kalkulasi)",
+        en: "Stockfish Pure (Engine Calculation)"
     },
     optPersonaMagnus: {
-        id: "👑 Magnus Carlsen (Squeeze & Endgame Grind)",
-        en: "👑 Magnus Carlsen (Squeeze & Endgame Grind)"
+        id: "Magnus Carlsen (Endgame Squeeze & Kontrol)",
+        en: "Magnus Carlsen (Endgame Squeeze & Control)"
     },
     optPersonaTal: {
-        id: "🪄 Mikhail Tal (Pengorbanan Liar & Serangan Raja)",
-        en: "🪄 Mikhail Tal (Wild Sacrifices & King Attack)"
+        id: "Mikhail Tal (Serangan Taktis & Inisiatif)",
+        en: "Mikhail Tal (Tactical Attack & Initiative)"
     },
     optPersonaKasparov: {
-        id: "⚡ Garry Kasparov (Inisiatif Dinamis & Dominasi)",
-        en: "⚡ Garry Kasparov (Dynamic Initiative & Dominance)"
+        id: "Garry Kasparov (Dominasi Pusat & Serangan)",
+        en: "Garry Kasparov (Center Dominance & Initiative)"
     },
     optPersonaNakamura: {
-        id: "🚀 Hikaru Nakamura (Taktik Kilat, Jebakan & Swindle)",
-        en: "🚀 Hikaru Nakamura (Speed Tactics, Traps & Swindle)"
+        id: "Hikaru Nakamura (Taktik Kilat & Jebakan)",
+        en: "Hikaru Nakamura (Speed Tactics & Sharp Traps)"
     },
     optPersonaKarpov: {
-        id: "🛡️ Anatoly Karpov (Profilaksis & Cekikan Posisional)",
-        en: "🛡️ Anatoly Karpov (Prophylaxis & Positional Squeeze)"
+        id: "Anatoly Karpov (Profilaksis & Cekikan Posisional)",
+        en: "Anatoly Karpov (Prophylaxis & Positional Squeeze)"
     }
 };
 
