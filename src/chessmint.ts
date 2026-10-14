@@ -3,27 +3,121 @@ var Config: any = (window as any).Config || undefined;
 var context: any = undefined;
 var ecoTable: Map<string, any> | null = null;
 
+var apexHUDToastTimeout: any = null;
+function showApexHUDToast(text: string, duration = 2400)
+{
+    try
+    {
+        let toast = document.querySelector(".apex-deep-toast") as HTMLElement;
+        if (!toast)
+        {
+            toast = document.createElement("div");
+            toast.className = "apex-deep-toast";
+            document.body.appendChild(toast);
+        }
+        toast.textContent = text;
+        toast.style.opacity = "1";
+
+        if (apexHUDToastTimeout) clearTimeout(apexHUDToastTimeout);
+        apexHUDToastTimeout = setTimeout(() =>
+        {
+            if (toast) toast.style.opacity = "0";
+        }, duration);
+    }
+    catch (_) {}
+}
+
 function notify(content: string, icon = "circle-info")
 {
     try
     {
-        if (typeof (window as any).toaster?.add === "function")
+        let handledByNative = false;
+        const toaster = (window as any).toaster;
+
+        if (typeof toaster?.add === "function")
         {
-            (window as any).toaster.add({
-                id: "rea-notification-" + Date.now(),
+            const notiId = "chessmint-settings-notification";
+
+            if (Array.isArray(toaster.notifications))
+            {
+                const existingIndex = toaster.notifications.findIndex((n: any) => n && n.id === notiId);
+                if (existingIndex !== -1)
+                {
+                    return;
+                }
+            }
+
+            toaster.add({
+                id: notiId,
                 duration: 2500,
                 icon: icon,
                 content: content,
+                text: content,
+                message: content,
+                title: content,
+                description: content,
+                body: content,
+                html: `<span>${content}</span>`,
             });
+            handledByNative = true;
+
+            setTimeout(() =>
+            {
+                try
+                {
+                    const toastCards = document.querySelectorAll(
+                        ".toaster-container > *, [class*='toaster-notification'], [class*='toaster-item'], [class*='cc-toaster-item'], [class*='toast-message']"
+                    );
+                    let foundVisibleText = false;
+                    toastCards.forEach((card) =>
+                    {
+                        const rawText = card.textContent?.replace(/[\s×✕]/g, "") || "";
+                        if (rawText.length > 0)
+                        {
+                            foundVisibleText = true;
+                        }
+                        else
+                        {
+                            let msgEl = card.querySelector(".apex-toast-injected") as HTMLElement;
+                            if (!msgEl)
+                            {
+                                msgEl = document.createElement("div");
+                                msgEl.className = "apex-toast-injected";
+                                card.insertBefore(msgEl, card.firstChild);
+                            }
+                            msgEl.textContent = content;
+                            msgEl.style.color = "#ffffff";
+                            msgEl.style.fontSize = "13px";
+                            msgEl.style.fontWeight = "600";
+                            msgEl.style.padding = "6px 12px";
+                            msgEl.style.display = "block";
+                            msgEl.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+                            foundVisibleText = true;
+                        }
+                    });
+
+                    if (!foundVisibleText && toastCards.length === 0)
+                    {
+                        showApexHUDToast(content);
+                    }
+                }
+                catch (_)
+                {
+                    showApexHUDToast(content);
+                }
+            }, 60);
         }
-        else
+
+        if (!handledByNative)
         {
-            console.log(`[REA] ${content}`);
+            showApexHUDToast(content);
+            console.log(`[Apex Chess] ${content}`);
         }
     }
     catch (e)
     {
-        console.log(`[REA] ${content}`);
+        showApexHUDToast(content);
+        console.log(`[Apex Chess] ${content}`);
     }
 }
 
@@ -567,27 +661,13 @@ class GameController
     triggerDeepCalculation()
     {
         if (this.isStealthHidden) return;
-        this.showDeepToast("🚀 Deep Calc: Depth 22");
+        showApexHUDToast("Deep Calc: Depth 22");
         this.master.engine.boostEvaluation(22, 4000);
     }
 
     private showDeepToast(text: string)
     {
-        let toast = document.querySelector(".apex-deep-toast") as HTMLElement;
-        if (!toast)
-        {
-            toast = document.createElement("div");
-            toast.className = "apex-deep-toast";
-            document.body.appendChild(toast);
-        }
-        toast.textContent = text;
-        toast.style.opacity = "1";
-
-        if (this.deepToastTimeout) clearTimeout(this.deepToastTimeout);
-        this.deepToastTimeout = setTimeout(() =>
-        {
-            if (toast) toast.style.opacity = "0";
-        }, 2200);
+        showApexHUDToast(text);
     }
 
     updatePersonaHUD()
@@ -1222,8 +1302,8 @@ class StockfishEngine
             })
             .catch(err =>
             {
-                console.error("[REA] Stockfish fallback worker failed:", err);
-                notify("REA: Failed to load Stockfish engine", "error");
+                console.error("[Apex Chess] Stockfish fallback worker failed:", err);
+                notify("Apex: Failed to load Stockfish engine", "error");
             });
     }
 
@@ -1995,11 +2075,11 @@ function InitChessMint(chessboard: HTMLElement)
                 master = null;
             }
             master = new ChessMint(chessboard, options);
-            console.log("[REA] Initialized successfully on chessboard:", chessboard);
+            console.log("[Apex Chess] Initialized successfully on chessboard:", chessboard);
         }
         catch (e)
         {
-            console.error("[REA] Failed to load Chess Master:", e);
+            console.error("[Apex Chess] Failed to load Chess Master:", e);
         }
     });
 }
