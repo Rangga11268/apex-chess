@@ -219,6 +219,78 @@ class GameController
         return "";
     }
 
+    getRemainingTimeSeconds(): number | null
+    {
+        try
+        {
+            const playingAs = typeof this.controller.getPlayingAs === "function" ? this.controller.getPlayingAs() : null;
+            const colorKey = playingAs === 2 ? "black" : (playingAs === 1 ? "white" : null);
+
+            // 1. Controller Clock API inspection
+            let clocks: any = null;
+            if (typeof (this.controller as any).getClocks === "function")
+            {
+                clocks = (this.controller as any).getClocks();
+            }
+            else if (typeof (this.controller as any).timeController?.getClocks === "function")
+            {
+                clocks = (this.controller as any).timeController.getClocks();
+            }
+
+            if (clocks && colorKey)
+            {
+                const ms = clocks[colorKey];
+                if (typeof ms === "number" && !isNaN(ms))
+                {
+                    return Math.max(0, ms / 1000);
+                }
+            }
+
+            // 2. DOM Monospace Clock Fallback
+            // On Chess.com, the player on this device sits on the bottom layout
+            const clockEl = document.querySelector(
+                ".clock-player-bottom .clock-time-monospace, .clock-bottom .clock-time-monospace, .player-bottom .clock-time-monospace, .clock-player-bottom [class*='time'], .clock-bottom"
+            );
+            if (clockEl && clockEl.textContent)
+            {
+                const parsed = GameController.parseTimeString(clockEl.textContent);
+                if (parsed !== null) return parsed;
+            }
+        }
+        catch (e) {}
+
+        return null;
+    }
+
+    static parseTimeString(timeStr: string): number | null
+    {
+        if (!timeStr) return null;
+        const clean = timeStr.trim().replace(/[^\d:.]/g, '');
+        if (!clean) return null;
+        const parts = clean.split(':');
+        if (parts.length === 1)
+        {
+            const s = parseFloat(parts[0]);
+            return isNaN(s) ? null : s;
+        }
+        else if (parts.length === 2)
+        {
+            const m = parseInt(parts[0], 10);
+            const s = parseFloat(parts[1]);
+            if (isNaN(m) || isNaN(s)) return null;
+            return m * 60 + s;
+        }
+        else if (parts.length === 3)
+        {
+            const h = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10);
+            const s = parseFloat(parts[2]);
+            if (isNaN(h) || isNaN(m) || isNaN(s)) return null;
+            return h * 3600 + m * 60 + s;
+        }
+        return null;
+    }
+
     private UpdateEngine(isNewGame: boolean)
     {
         let fen = this.getFenSafe();
@@ -722,6 +794,84 @@ class StockfishEngine
         }
     }
 
+    static calculateTimeBudget(remainingSec: number | null, userDepth: number = 12): EngineTimeBudget
+    {
+        // 1. Untimed / Rapid / Classical (> 340s or clock not active/null)
+        if (remainingSec === null || remainingSec > 340)
+        {
+            return {
+                movetime: 1200,
+                depthCap: userDepth,
+                minDelay: 800,
+                maxDelay: 2200,
+                forceBestMove: false,
+            };
+        }
+
+        // 2. Critical Time Trouble Panic (< 10 seconds remaining)
+        if (remainingSec < 10)
+        {
+            return {
+                movetime: 60,
+                depthCap: Math.min(userDepth, 6),
+                minDelay: 30,
+                maxDelay: 80,
+                forceBestMove: true,
+            };
+        }
+
+        // 3. 1-Minute Bullet / Hyperbullet (<= 70 seconds)
+        if (remainingSec <= 70)
+        {
+            return {
+                movetime: 120,
+                depthCap: Math.min(userDepth, 8),
+                minDelay: 80,
+                maxDelay: 220,
+                forceBestMove: false,
+            };
+        }
+
+        // 4. 3-Minute Blitz (<= 200 seconds)
+        if (remainingSec <= 200)
+        {
+            return {
+                movetime: 350,
+                depthCap: Math.min(userDepth, 9),
+                minDelay: 200,
+                maxDelay: 450,
+                forceBestMove: false,
+            };
+        }
+
+        // 5. 5-Minute Blitz (<= 340 seconds)
+        return {
+            movetime: 650,
+            depthCap: Math.min(userDepth, 11),
+            minDelay: 400,
+            maxDelay: 850,
+            forceBestMove: false,
+        };
+    }
+
+    getTimeBudget(): EngineTimeBudget
+    {
+        const userDepth = this.depth || 12;
+        if (this.master?.options?.adaptive_timing === false)
+        {
+            return {
+                movetime: 1200,
+                depthCap: userDepth,
+                minDelay: 800,
+                maxDelay: 2200,
+                forceBestMove: false,
+            };
+        }
+
+        const remainingSec = this.master?.game?.getRemainingTimeSeconds?.() ?? null;
+        return StockfishEngine.calculateTimeBudget(remainingSec, userDepth);
+    }
+
     go(): void
     {
         this.onReady(() =>
@@ -729,8 +879,9 @@ class StockfishEngine
             this.stopEvaluation(() =>
             {
                 this.isEvaluating = true;
-                // movetime caps thinking at 1.2s; depth is a ceiling so it never overshoots the user's setting
-                this.send(`go movetime 1200 depth ${this.depth}`);
+                const budget = this.getTimeBudget();
+                const targetDepth = Math.min(this.depth, budget.depthCap);
+                this.send(`go movetime ${budget.movetime} depth ${targetDepth}`);
             });
         });
     }
@@ -1094,9 +1245,11 @@ class StockfishEngine
                 const currentFen = typeof this.master.game.controller.getFEN === "function" ?
                     this.master.game.controller.getFEN() : "";
 
-                // Anti-cheat: 25% chance to play 2nd-best move when available
+                const budget = this.getTimeBudget();
+
+                // Anti-cheat: 25% chance to play 2nd-best move when available (suppressed in time-trouble panic)
                 // ponytail: naive flat probability; upgrade to eval-delta weighting if needed
-                const pickIndex = (Math.random() < 0.25 && top_pv_moves.length > 1) ? 1 : 0;
+                const pickIndex = (!budget.forceBestMove && Math.random() < 0.25 && top_pv_moves.length > 1) ? 1 : 0;
                 let chosenMove = top_pv_moves[pickIndex];
 
                 let legalMoves = typeof this.master.game.controller.getLegalMoves === "function" ?
@@ -1116,9 +1269,10 @@ class StockfishEngine
                     if (finalMove.promotion != null)
                         moveData.promotion = finalMove.promotion;
 
-                    // Human-like delay: 800–2200ms, or user-configured fixed value
+                    // Adaptive delay based on time control, or user-configured fixed override
+                    const delayRange = Math.max(10, budget.maxDelay - budget.minDelay);
                     const delay = this.master.options.auto_move_delay ||
-                        (Math.floor(Math.random() * 1400) + 800);
+                        (Math.floor(Math.random() * delayRange) + budget.minDelay);
                     this.autoMoveTimeout = setTimeout(() =>
                     {
                         this.autoMoveTimeout = null;

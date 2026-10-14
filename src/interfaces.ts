@@ -266,4 +266,14 @@ interface ExtensionOptions
     stockfishUrl?: string;
     ecoUrl?: string;
     auto_move_delay?: number;
+    adaptive_timing?: boolean;
+}
+
+interface EngineTimeBudget
+{
+    movetime: number;
+    depthCap: number;
+    minDelay: number;
+    maxDelay: number;
+    forceBestMove: boolean;
 }

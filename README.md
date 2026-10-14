@@ -41,6 +41,14 @@ Includes optional safeguards for study and non-destructive practice:
 - **Dynamic Calculation Delay**: Adds randomized thinking time (800ms to 2200ms) before rendering moves.
 - **Candidate Move Jitter**: Randomizes selection between rank-1 and rank-2 engine lines (~25% distribution) to emulate natural human accuracy curves rather than robotic 100% CAPS precision.
 
+### Adaptive Blitz & Bullet Speed-Up
+Automatically reads match clocks and dials engine computation time and auto-move delays to the active pace:
+- **Bullet (<= 70s / 1m & Hyperbullet)**: Engine calculation capped at 120ms with 80ms to 220ms play delay.
+- **3-Minute Blitz (<= 200s)**: Engine calculation tuned to 350ms with 200ms to 450ms play delay.
+- **5-Minute Blitz (<= 340s)**: Engine calculation tuned to 650ms with 400ms to 850ms play delay.
+- **Time Trouble (< 10s remaining)**: Overdrive mode with 60ms engine calculation and 30ms to 80ms moves, locking to rank-1 moves to prevent flag loss.
+- **Rapid, Classical & Bots (> 340s or untimed)**: Preserves deep analysis (1200ms compute, full user-specified search depth, and natural 800ms-2200ms cadence).
+
 ### Evaluation Bar & Opening Book
 - **Advantage Bar**: Live centipawn and forced mate counter adjusting to your active side (White or Black).
 - **ECO Opening Database**: Identifies over 27 opening systems instantly without engine compute.

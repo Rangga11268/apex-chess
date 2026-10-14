@@ -6,6 +6,7 @@ var inputMoveAnalysis: HTMLInputElement;
 var inputDepthBar: HTMLInputElement;
 var inputEvalBar: HTMLInputElement;
 var inputAutoMove: HTMLInputElement;
+var inputAdaptiveTiming: HTMLInputElement;
 var inputUseNNUE: HTMLInputElement;
 var btnLangId: HTMLElement | null;
 var btnLangEn: HTMLElement | null;
@@ -22,6 +23,7 @@ const DefaultExtensionOptions: ExtensionOptions = {
     evaluation_bar: true,
     use_nnue: false,
     auto_move: false,
+    adaptive_timing: true,
     language: "id",
 };
 
@@ -114,6 +116,14 @@ const Translations: { [key: string]: TranslationItem } = {
     statusSave: {
         id: "Pengaturan tersimpan otomatis",
         en: "Settings saved automatically"
+    },
+    labelAdaptiveTiming: {
+        id: "Waktu Adaptif (Bullet/Blitz Speed-Up)",
+        en: "Adaptive Timing (Bullet/Blitz Speed-Up)"
+    },
+    tooltipAdaptiveTiming: {
+        id: "Otomatis mempercepat reaksi engine & jalan otomatis saat bermain Bullet (1m) & Blitz (3m/5m), dan normalkan saat Rapid/Bot.",
+        en: "Automatically speeds up engine thinking & auto-play for Bullet (1m) & Blitz (3m/5m), keeping normal timing for Rapid/Bots."
     }
 };
 
@@ -169,6 +179,7 @@ function RestoreOptions()
         inputEvalBar.checked = options.evaluation_bar !== undefined ? options.evaluation_bar : true;
         inputUseNNUE.checked = options.use_nnue || false;
         inputAutoMove.checked = options.auto_move || false;
+        inputAdaptiveTiming.checked = options.adaptive_timing !== undefined ? options.adaptive_timing : true;
 
         currentLanguage = options.language === "en" ? "en" : "id";
         ApplyLanguage(currentLanguage);
@@ -192,6 +203,7 @@ function OnOptionsChange()
         evaluation_bar: inputEvalBar.checked,
         use_nnue: inputUseNNUE.checked,
         auto_move: inputAutoMove.checked,
+        adaptive_timing: inputAdaptiveTiming.checked,
         language: currentLanguage,
     };
 
@@ -245,6 +257,7 @@ function InitOptions()
     inputEvalBar = document.getElementById("option-evaluation-bar") as HTMLInputElement;
     inputUseNNUE = document.getElementById("option-use-nnue") as HTMLInputElement;
     inputAutoMove = document.getElementById("option-auto-move") as HTMLInputElement;
+    inputAdaptiveTiming = document.getElementById("option-adaptive-timing") as HTMLInputElement;
 
     btnLangId = document.getElementById("lang-btn-id");
     btnLangEn = document.getElementById("lang-btn-en");

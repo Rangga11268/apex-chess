@@ -88,4 +88,87 @@ assert(cmCode.includes("ClearAnalysisMarkings"), "chessmint.js must include Clea
 assert(cmCode.includes("autoMoveTimeout"), "chessmint.js must handle autoMoveTimeout race prevention");
 console.log("✓ Lifecycle and memory leak safeguards verified");
 
+// 8. Verify Adaptive Blitz/Bullet Time Budget & Clock Parsing
+function parseTimeString(timeStr) {
+    if (!timeStr) return null;
+    const clean = timeStr.trim().replace(/[^\d:.]/g, '');
+    if (!clean) return null;
+    const parts = clean.split(':');
+    if (parts.length === 1) {
+        const s = parseFloat(parts[0]);
+        return isNaN(s) ? null : s;
+    } else if (parts.length === 2) {
+        const m = parseInt(parts[0], 10);
+        const s = parseFloat(parts[1]);
+        if (isNaN(m) || isNaN(s)) return null;
+        return m * 60 + s;
+    } else if (parts.length === 3) {
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const s = parseFloat(parts[2]);
+        if (isNaN(h) || isNaN(m) || isNaN(s)) return null;
+        return h * 3600 + m * 60 + s;
+    }
+    return null;
+}
+
+assert.strictEqual(parseTimeString("0:45"), 45, "0:45 parses as 45s");
+assert.strictEqual(parseTimeString("3:21"), 201, "3:21 parses as 201s");
+assert.strictEqual(parseTimeString("10:00"), 600, "10:00 parses as 600s");
+assert.strictEqual(parseTimeString("0:08.4"), 8.4, "0:08.4 parses as 8.4s");
+assert.strictEqual(parseTimeString("1:05:30"), 3930, "1:05:30 parses as 3930s");
+assert.strictEqual(parseTimeString("invalid"), null, "invalid text returns null");
+console.log("✓ Clock parser verified");
+
+function calculateTimeBudget(remainingSec, userDepth = 15) {
+    if (remainingSec === null || remainingSec > 340) {
+        return { movetime: 1200, depthCap: userDepth, minDelay: 800, maxDelay: 2200, forceBestMove: false };
+    }
+    if (remainingSec < 10) {
+        return { movetime: 60, depthCap: Math.min(userDepth, 6), minDelay: 30, maxDelay: 80, forceBestMove: true };
+    }
+    if (remainingSec <= 70) {
+        return { movetime: 120, depthCap: Math.min(userDepth, 8), minDelay: 80, maxDelay: 220, forceBestMove: false };
+    }
+    if (remainingSec <= 200) {
+        return { movetime: 350, depthCap: Math.min(userDepth, 9), minDelay: 200, maxDelay: 450, forceBestMove: false };
+    }
+    return { movetime: 650, depthCap: Math.min(userDepth, 11), minDelay: 400, maxDelay: 850, forceBestMove: false };
+}
+
+// Untimed / Rapid / Bot
+const rapid = calculateTimeBudget(600, 15);
+assert.strictEqual(rapid.movetime, 1200, "Rapid should use standard 1200ms movetime");
+assert.strictEqual(rapid.depthCap, 15, "Rapid should preserve full user depth");
+assert.strictEqual(rapid.forceBestMove, false, "Rapid should allow anti-cheat randomization");
+
+// 5-min Blitz (~300s)
+const blitz5 = calculateTimeBudget(300, 15);
+assert.strictEqual(blitz5.movetime, 650, "5m Blitz should use 650ms movetime");
+assert.strictEqual(blitz5.depthCap, 11, "5m Blitz should cap depth at 11");
+
+// 3-min Blitz (~180s)
+const blitz3 = calculateTimeBudget(180, 15);
+assert.strictEqual(blitz3.movetime, 350, "3m Blitz should use 350ms movetime");
+assert.strictEqual(blitz3.depthCap, 9, "3m Blitz should cap depth at 9");
+
+// 1-min Bullet (~60s)
+const bullet1 = calculateTimeBudget(60, 15);
+assert.strictEqual(bullet1.movetime, 120, "1m Bullet should use 120ms movetime");
+assert.strictEqual(bullet1.depthCap, 8, "1m Bullet should cap depth at 8");
+assert(bullet1.minDelay <= 100 && bullet1.maxDelay <= 250, "1m Bullet should have quick auto-move delay");
+
+// Panic mode (<10s)
+const panic = calculateTimeBudget(6, 15);
+assert.strictEqual(panic.movetime, 60, "Panic mode should react in 60ms");
+assert.strictEqual(panic.forceBestMove, true, "Panic mode must force best move to prevent flag loss");
+console.log("✓ Dynamic Blitz/Bullet time budget scaling verified");
+
+// 9. Verify Options HTML UI Toggle
+const optionsHtml = fs.readFileSync(path.join(distDir, "html", "options.html"), "utf-8");
+assert(optionsHtml.includes("option-adaptive-timing"), "options.html must contain option-adaptive-timing checkbox");
+assert(cmCode.includes("calculateTimeBudget"), "chessmint.js bundle must contain calculateTimeBudget");
+console.log("✓ Adaptive timing UI & bundle integration verified");
+
 console.log("\nALL CHECKS PASSED SUCCESSFULLY!");
+

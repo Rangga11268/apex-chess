@@ -10,6 +10,7 @@ const DefaultExtensionOptions2: ExtensionOptions = {
     evaluation_bar: true,
     use_nnue: false,
     auto_move: false,
+    adaptive_timing: true,
     language: "id",
 };
 
