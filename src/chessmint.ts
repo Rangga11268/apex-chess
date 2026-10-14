@@ -62,6 +62,7 @@ class GameController
     private evalScore: HTMLElement | null;
     private evalScoreAbbreviated: HTMLElement | null;
     private currentMarkings: Marking[];
+    lastAnalysisMarkings: string[];
     private master: ChessMint;
 
     constructor(master: ChessMint, chessboard: HTMLElement)
@@ -77,6 +78,7 @@ class GameController
         this.evalScore = null;
         this.evalScoreAbbreviated = null;
         this.currentMarkings = [];
+        this.lastAnalysisMarkings = [];
 
         // Hook to update engine on every move
         if (typeof this.controller.on === "function")
@@ -202,7 +204,7 @@ class GameController
                 this.evalScore = layoutEvaluation.querySelector(".evaluation-bar-score");
                 this.evalScoreAbbreviated = layoutEvaluation.querySelector(".evaluation-bar-scoreAbbreviated");
 
-                if (this.options && !this.options.isWhiteOnBottom && this.options.flipped)
+                if (this.options && (!this.options.isWhiteOnBottom || this.options.flipped))
                 {
                     this.evalBar?.classList.add("evaluation-bar-flipped");
                 }
@@ -250,6 +252,36 @@ class GameController
         this.currentMarkings = [];
     }
 
+    ClearAnalysisMarkings()
+    {
+        if (this.controller?.markings?.removeOne)
+        {
+            this.lastAnalysisMarkings.forEach((key) =>
+            {
+                try {
+                    this.controller.markings.removeOne(key);
+                } catch (e) {}
+            });
+        }
+        this.lastAnalysisMarkings = [];
+    }
+
+    destroy()
+    {
+        this.RemoveCurrentMarkings();
+        this.ClearAnalysisMarkings();
+        if (this.evalBar)
+        {
+            this.evalBar.parentElement?.remove();
+            this.evalBar = null;
+        }
+        if (this.depthBar)
+        {
+            this.depthBar.parentElement?.parentElement?.remove();
+            this.depthBar = null;
+        }
+    }
+
     HintMoves(topMoves: TopMove[], lastTopMoves: TopMove[], isBestMove: boolean)
     {
         let options = this.master.options;
@@ -289,7 +321,7 @@ class GameController
                     const second = topMoves[1];
                     const secondScore = second.mate != null ? (second.mate > 0 ? 10000 : -10000) : (second.cp || 0);
                     // If best move is overwhelmingly better than 2nd best (> 180 cp gap or finding forced mate)
-                    if (bestScore - secondScore > 180 || (bestMove.mate != null && second.mate == null))
+                    if (bestScore - secondScore > 180 || (bestMove.mate != null && bestMove.mate > 0 && second.mate == null))
                     {
                         isBrilliant = true;
                     }
@@ -310,6 +342,7 @@ class GameController
             };
 
             const bestScore = bestMove.mate != null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp || 0);
+            const usedBadgeSquares = new Set<string>();
 
             topMoves.forEach((move, idx) =>
             {
@@ -340,6 +373,10 @@ class GameController
                         arrowColor = movePalette.good;
                         opacity = 0.45;
                     }
+                    if (idx === 0)
+                    {
+                        moveTypeBadge = "BestMove";
+                    }
                 }
                 else if (hintMode === "classified")
                 {
@@ -354,7 +391,7 @@ class GameController
                         else
                         {
                             arrowColor = movePalette.best;
-                            moveTypeBadge = "BestMove";
+                            moveTypeBadge = (move.mate != null && move.mate > 0) ? "WinnerWhite" : "BestMove";
                         }
                     }
                     else if (scoreDiff <= 30)
@@ -392,6 +429,10 @@ class GameController
                 {
                     // Classic "best" mode
                     arrowColor = (idx === 0) ? (isBrilliant ? movePalette.brilliant : movePalette.best) : movePalette.great;
+                    if (idx === 0)
+                    {
+                        moveTypeBadge = isBrilliant ? "Brilliant" : "BestMove";
+                    }
                 }
 
                 // Add visual arrow
@@ -407,14 +448,14 @@ class GameController
                     type: "arrow",
                 });
 
-                // Add badge on target square only for the primary recommended move (idx === 0) or if explicitly Brilliant
-                if (idx === 0)
+                // Add badge on target square (one badge per square)
+                if (options.move_analysis && moveTypeBadge != null && !usedBadgeSquares.has(move.to))
                 {
-                    const badgeType = isBrilliant ? "Brilliant" : (move.mate != null ? (move.mate < 0 ? "ResignWhite" : "WinnerWhite") : "BestMove");
+                    usedBadgeSquares.add(move.to);
                     this.currentMarkings.push({
                         data: {
                             square: move.to,
-                            type: badgeType,
+                            type: moveTypeBadge,
                         },
                         node: true,
                         persistent: false,
@@ -523,6 +564,7 @@ class StockfishEngine
     private topMoves: TopMove[];
     private lastTopMoves: TopMove[];
     private lastMoveScore: TEffectType | null;
+    private autoMoveTimeout: any = null;
 
     private options: { [opt: string]: string | number | boolean; };
 
@@ -542,6 +584,7 @@ class StockfishEngine
         this.lastTopMoves = [];
         this.isInTheory = false;
         this.lastMoveScore = null;
+        this.autoMoveTimeout = null;
 
         this.threads = this.master.options.threads || 2;
         this.depth = this.master.options.depth || 15;
@@ -702,8 +745,38 @@ class StockfishEngine
         }
     }
 
+    destroy()
+    {
+        if (this.autoMoveTimeout)
+        {
+            clearTimeout(this.autoMoveTimeout);
+            this.autoMoveTimeout = null;
+        }
+        if (this.stockfish)
+        {
+            try
+            {
+                this.stockfish.terminate();
+            }
+            catch (e) {}
+            this.stockfish = null;
+        }
+        this.readyCallbacks = [];
+        this.goDoneCallbacks = [];
+        this.messageQueue = [];
+        this.isEvaluating = false;
+        this.ready = false;
+        this.loaded = false;
+    }
+
     stopEvaluation(callback: { (): void; })
     {
+        if (this.autoMoveTimeout)
+        {
+            clearTimeout(this.autoMoveTimeout);
+            this.autoMoveTimeout = null;
+        }
+
         if (this.isEvaluating)
         {
             this.goDoneCallbacks = [callback];
@@ -718,6 +791,12 @@ class StockfishEngine
 
     UpdatePosition(FENs: string | null = null, isNewGame: boolean = true)
     {
+        if (this.autoMoveTimeout)
+        {
+            clearTimeout(this.autoMoveTimeout);
+            this.autoMoveTimeout = null;
+        }
+
         this.onReady(() =>
         {
             this.stopEvaluation(() =>
@@ -778,21 +857,27 @@ class StockfishEngine
         }
         else
         {
-            let match = line.match(/^info .*\bdepth (\d+) .*\bseldepth (\d+) .*\bmultipv (\d+) .*\bscore (\w+) (-?\d+) .*\bpv (.+)/);
-
-            if (match)
+            if (line.startsWith("info ") && line.includes(" pv ") && line.includes(" score "))
             {
                 if (!this.isRequestedStop)
                 {
-                    let cp = (match[4] == "cp") ? parseInt(match[5]) : null;
-                    let mate = (match[4] == "cp") ? null : parseInt(match[5]);
-                    let move = new TopMove(match[6], parseInt(match[1]), cp, mate);
+                    const depthMatch = line.match(/\bdepth (\d+)/);
+                    const scoreMatch = line.match(/\bscore (cp|mate) (-?\d+)/);
+                    const pvMatch = line.match(/\bpv (.+)$/);
 
-                    this.onTopMoves(move, false);
+                    if (depthMatch && scoreMatch && pvMatch)
+                    {
+                        let cp = (scoreMatch[1] === "cp") ? parseInt(scoreMatch[2]) : null;
+                        let mate = (scoreMatch[1] === "mate") ? parseInt(scoreMatch[2]) : null;
+                        let move = new TopMove(pvMatch[1].trim(), parseInt(depthMatch[1]), cp, mate);
+
+                        this.onTopMoves(move, false);
+                    }
                 }
             }
-            else if (match = line.match(/^bestmove ([a-h][1-8][a-h][1-8][qrbn]?)?/))
+            else if (line.startsWith("bestmove"))
             {
+                let match = line.match(/^bestmove ([a-h][1-8][a-h][1-8][qrbn]?)?/);
                 this.isEvaluating = false;
                 if (this.goDoneCallbacks.length > 0)
                 {
@@ -801,7 +886,7 @@ class StockfishEngine
                     copy.forEach(function (callback) { callback(); });
                 }
 
-                if (!this.isRequestedStop && match[1] !== undefined)
+                if (!this.isRequestedStop && match && match[1] !== undefined)
                 {
                     const index = this.topMoves.findIndex(object => object.move === match![1]);
                     if (index >= 0)
@@ -909,6 +994,8 @@ class StockfishEngine
 
         if (this.lastMoveScore != null && this.master.game.controller?.markings)
         {
+            this.master.game.ClearAnalysisMarkings();
+
             const highlightColors: { [id: string]: string; } = {
                 "Brilliant": "#1baca6",
                 "GreatFind": "#5c8bb0",
@@ -935,6 +1022,7 @@ class StockfishEngine
                     persistent: true,
                     type: "highlight",
                 });
+                this.master.game.lastAnalysisMarkings.push(`highlight|${lastMove.to}`);
             }
 
             if (typeof this.master.game.controller.markings.addOne === "function")
@@ -948,6 +1036,7 @@ class StockfishEngine
                     persistent: true,
                     type: "effect",
                 });
+                this.master.game.lastAnalysisMarkings.push(`effect|${lastMove.to}`);
             }
         }
     }
@@ -989,6 +1078,12 @@ class StockfishEngine
         // Auto move with randomized human-like delay + occasional 2nd-best pick to avoid detection
         if (this.master.options.auto_move && isBestMove && this.master.game.controller)
         {
+            if (this.autoMoveTimeout)
+            {
+                clearTimeout(this.autoMoveTimeout);
+                this.autoMoveTimeout = null;
+            }
+
             const playingAs = typeof this.master.game.controller.getPlayingAs === "function" ?
                 this.master.game.controller.getPlayingAs() : null;
             const currentTurn = typeof this.master.game.controller.getTurn === "function" ?
@@ -996,6 +1091,9 @@ class StockfishEngine
 
             if (playingAs !== null && currentTurn !== null && playingAs === currentTurn && top_pv_moves.length > 0)
             {
+                const currentFen = typeof this.master.game.controller.getFEN === "function" ?
+                    this.master.game.controller.getFEN() : "";
+
                 // Anti-cheat: 25% chance to play 2nd-best move when available
                 // ponytail: naive flat probability; upgrade to eval-delta weighting if needed
                 const pickIndex = (Math.random() < 0.25 && top_pv_moves.length > 1) ? 1 : 0;
@@ -1021,13 +1119,25 @@ class StockfishEngine
                     // Human-like delay: 800–2200ms, or user-configured fixed value
                     const delay = this.master.options.auto_move_delay ||
                         (Math.floor(Math.random() * 1400) + 800);
-                    setTimeout(() =>
+                    this.autoMoveTimeout = setTimeout(() =>
                     {
+                        this.autoMoveTimeout = null;
                         try
                         {
-                            if (typeof this.master.game.controller.move === "function")
+                            if (!this.master?.game?.controller) return;
+                            const nowPlayingAs = typeof this.master.game.controller.getPlayingAs === "function" ?
+                                this.master.game.controller.getPlayingAs() : null;
+                            const nowTurn = typeof this.master.game.controller.getTurn === "function" ?
+                                this.master.game.controller.getTurn() : null;
+                            const nowFen = typeof this.master.game.controller.getFEN === "function" ?
+                                this.master.game.controller.getFEN() : "";
+
+                            if (nowPlayingAs === nowTurn && (!currentFen || nowFen === currentFen))
                             {
-                                this.master.game.controller.move(moveData);
+                                if (typeof this.master.game.controller.move === "function")
+                                {
+                                    this.master.game.controller.move(moveData);
+                                }
                             }
                         }
                         catch (err)
@@ -1081,6 +1191,7 @@ class ChessMint
     engine: StockfishEngine;
     game: GameController;
     options: ExtensionOptions;
+    private optionsListener: ((event: Event) => void) | null = null;
 
     constructor(chessboard: HTMLElement, options: ExtensionOptions)
     {
@@ -1088,14 +1199,33 @@ class ChessMint
         this.game = new GameController(this, chessboard);
         this.engine = new StockfishEngine(this);
 
-        window.addEventListener("ChessMintUpdateOptions", (event) =>
+        this.optionsListener = (event: Event) =>
         {
             this.options = (event as any).detail;
             this.game.UpdateExtensionOptions();
             this.engine.UpdateExtensionOptions();
             const isId = this.options.language === "id";
             notify(isId ? "Pengaturan berhasil disimpan!" : "Settings updated!", "circle-gearwheel");
-        }, false);
+        };
+
+        window.addEventListener("ChessMintUpdateOptions", this.optionsListener, false);
+    }
+
+    destroy()
+    {
+        if (this.optionsListener)
+        {
+            window.removeEventListener("ChessMintUpdateOptions", this.optionsListener, false);
+            this.optionsListener = null;
+        }
+        if (this.engine)
+        {
+            this.engine.destroy();
+        }
+        if (this.game)
+        {
+            this.game.destroy();
+        }
     }
 
     onEngineLoaded()
@@ -1142,6 +1272,7 @@ var ChromeRequest = (function ()
                         depth: 12,
                         threads: 2,
                         show_hints: true,
+                        hint_mode: "classified",
                         move_analysis: true,
                         depth_bar: true,
                         evaluation_bar: true,
@@ -1185,6 +1316,11 @@ function InitChessMint(chessboard: HTMLElement)
 
         try
         {
+            if (master)
+            {
+                try { master.destroy(); } catch (e) {}
+                master = null;
+            }
             master = new ChessMint(chessboard, options);
             console.log("[REA] Initialized successfully on chessboard:", chessboard);
         }

@@ -1,9 +1,10 @@
 /// <reference types="chrome"/>
 
 const DefaultExtensionOptions2: ExtensionOptions = {
-    depth: 15,
+    depth: 12,
     threads: 2,
     show_hints: true,
+    hint_mode: "classified",
     move_analysis: true,
     depth_bar: true,
     evaluation_bar: true,
