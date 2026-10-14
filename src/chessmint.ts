@@ -121,6 +121,13 @@ function notify(content: string, icon = "circle-info")
     }
 }
 
+function normalizeColor(val: any): number | null
+{
+    if (val === 1 || val === "1" || val === "white" || val === "w") return 1;
+    if (val === 2 || val === "2" || val === "black" || val === "b") return 2;
+    return null;
+}
+
 class TopMove
 {
     readonly from: string;
@@ -364,6 +371,8 @@ class GameController
     private deepToastTimeout: any;
     private threatMarkings: string[];
     private master: ChessMint;
+    private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+    isDestroyed: boolean = false;
 
     constructor(master: ChessMint, chessboard: HTMLElement)
     {
@@ -524,7 +533,8 @@ class GameController
                 this.evalScore = layoutEvaluation.querySelector(".evaluation-bar-score");
                 this.evalScoreAbbreviated = layoutEvaluation.querySelector(".evaluation-bar-scoreAbbreviated");
 
-                if (this.options && (!this.options.isWhiteOnBottom || this.options.flipped))
+                const isFlipped = Boolean(this.options?.flipped) || this.options?.isWhiteOnBottom === false;
+                if (isFlipped)
                 {
                     this.evalBar?.classList.add("evaluation-bar-flipped");
                 }
@@ -554,8 +564,8 @@ class GameController
     {
         try
         {
-            const playingAs = typeof this.controller.getPlayingAs === "function" ? this.controller.getPlayingAs() : null;
-            const colorKey = playingAs === 2 ? "black" : (playingAs === 1 ? "white" : null);
+            const normPlayingAs = normalizeColor(typeof this.controller.getPlayingAs === "function" ? this.controller.getPlayingAs() : null);
+            const colorKey = normPlayingAs === 2 ? "black" : (normPlayingAs === 1 ? "white" : null);
 
             // 1. Controller Clock API inspection
             let clocks: any = null;
@@ -568,10 +578,11 @@ class GameController
                 clocks = (this.controller as any).timeController.getClocks();
             }
 
-            if (clocks && colorKey)
+            if (clocks && (colorKey || normPlayingAs))
             {
-                const ms = clocks[colorKey];
-                if (typeof ms === "number" && !isNaN(ms))
+                const val = colorKey ? clocks[colorKey] : clocks[normPlayingAs!];
+                const ms = typeof val === "number" ? val : (typeof val?.time === "number" ? val.time : null);
+                if (ms !== null && !isNaN(ms))
                 {
                     return Math.max(0, ms / 1000);
                 }
@@ -624,8 +635,9 @@ class GameController
 
     private setupHotkeys()
     {
-        window.addEventListener("keydown", (e: KeyboardEvent) =>
+        this.keydownListener = (e: KeyboardEvent) =>
         {
+            if (this.isDestroyed) return;
             const target = e.target as HTMLElement;
             if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
 
@@ -638,7 +650,8 @@ class GameController
                 e.preventDefault();
                 this.triggerDeepCalculation();
             }
-        });
+        };
+        window.addEventListener("keydown", this.keydownListener);
     }
 
     toggleStealthMode(force?: boolean)
@@ -828,6 +841,10 @@ class GameController
 
     private ResetGame()
     {
+        if (this.isDestroyed) return;
+        this.RemoveCurrentMarkings();
+        this.ClearAnalysisMarkings();
+        this.clearThreatMarkings();
         this.UpdateEngine(true);
     }
 
@@ -865,6 +882,12 @@ class GameController
 
     destroy()
     {
+        this.isDestroyed = true;
+        if (this.keydownListener)
+        {
+            window.removeEventListener("keydown", this.keydownListener);
+            this.keydownListener = null;
+        }
         this.RemoveCurrentMarkings();
         this.ClearAnalysisMarkings();
         this.clearThreatMarkings();
@@ -897,8 +920,8 @@ class GameController
         let bestMove = topMoves[0];
 
         // Only show hints when it's this player's turn
-        const playingAs = typeof this.controller.getPlayingAs === "function" ? this.controller.getPlayingAs() : null;
-        const currentTurn = typeof this.controller.getTurn === "function" ? this.controller.getTurn() : null;
+        const playingAs = normalizeColor(typeof this.controller.getPlayingAs === "function" ? this.controller.getPlayingAs() : null);
+        const currentTurn = normalizeColor(typeof this.controller.getTurn === "function" ? this.controller.getTurn() : null);
         if (playingAs !== null && currentTurn !== null && currentTurn !== playingAs)
         {
             this.RemoveCurrentMarkings();
@@ -906,7 +929,7 @@ class GameController
             if (options.evaluation_bar)
             {
                 let score = (bestMove.mate != null ? bestMove.mate : bestMove.cp) as number;
-                if (currentTurn == 2) score *= -1;
+                if (currentTurn === 2) score *= -1;
                 this.SetEvaluation(score, bestMove.mate != null);
             }
 
@@ -1186,7 +1209,7 @@ class StockfishEngine
     private options: { [opt: string]: string | number | boolean; };
 
     depth: number;
-    readonly threads: number;
+    threads: number;
 
     constructor(master: ChessMint)
     {
@@ -1516,7 +1539,12 @@ class StockfishEngine
 
     UpdateExtensionOptions()
     {
-        this.depth = this.master.options.depth;
+        this.depth = this.master.options.depth || 12;
+        if (this.master.options.threads && this.master.options.threads !== this.threads)
+        {
+            this.threads = this.master.options.threads;
+            this.send(`setoption name Threads value ${this.threads}`);
+        }
         if (this.topMoves.length > 0)
             this.onTopMoves(null, !this.isEvaluating);
     }
@@ -1677,7 +1705,7 @@ class StockfishEngine
                     }
                     else
                     {
-                        this.lastMoveScore = lastBestMove.mate > 0 ? "Excellent" : "ResignWhite";
+                        this.lastMoveScore = lastBestMove.mate > 0 ? "Excellent" : "Good";
                     }
                 }
                 else if (bestMove.mate != null)
@@ -1796,15 +1824,16 @@ class StockfishEngine
                 this.autoMoveTimeout = null;
             }
 
-            const playingAs = typeof this.master.game.controller.getPlayingAs === "function" ?
-                this.master.game.controller.getPlayingAs() : null;
-            const currentTurn = typeof this.master.game.controller.getTurn === "function" ?
-                this.master.game.controller.getTurn() : null;
+            const playingAs = normalizeColor(typeof this.master.game.controller.getPlayingAs === "function" ?
+                this.master.game.controller.getPlayingAs() : null);
+            const currentTurn = normalizeColor(typeof this.master.game.controller.getTurn === "function" ?
+                this.master.game.controller.getTurn() : null);
 
             if (playingAs !== null && currentTurn !== null && playingAs === currentTurn && top_pv_moves.length > 0)
             {
-                const currentFen = typeof this.master.game.controller.getFEN === "function" ?
-                    this.master.game.controller.getFEN() : "";
+                const currentFen = typeof (this.master.game as any).getFenSafe === "function" ?
+                    (this.master.game as any).getFenSafe() :
+                    ((typeof this.master.game.controller.getFEN === "function") ? this.master.game.controller.getFEN() : "");
 
                 const budget = this.getTimeBudget();
 
@@ -1816,11 +1845,19 @@ class StockfishEngine
 
                 let legalMoves = typeof this.master.game.controller.getLegalMoves === "function" ?
                     this.master.game.controller.getLegalMoves() : [];
-                const index = legalMoves.findIndex(m => m.from === chosenMove.from && m.to == chosenMove.to);
+                const index = legalMoves.findIndex(m =>
+                    m.from === chosenMove.from &&
+                    m.to == chosenMove.to &&
+                    (!chosenMove.promotion || !m.promotion || m.promotion.toLowerCase() === chosenMove.promotion.toLowerCase())
+                );
 
                 // Fallback to best move if chosen isn't legal
                 const finalIndex = index !== -1 ? index :
-                    legalMoves.findIndex(m => m.from === top_pv_moves[0].from && m.to == top_pv_moves[0].to);
+                    legalMoves.findIndex(m =>
+                        m.from === top_pv_moves[0].from &&
+                        m.to == top_pv_moves[0].to &&
+                        (!top_pv_moves[0].promotion || !m.promotion || m.promotion.toLowerCase() === top_pv_moves[0].promotion.toLowerCase())
+                    );
                 const finalMove = index !== -1 ? chosenMove : top_pv_moves[0];
 
                 if (finalIndex !== -1)
@@ -1841,12 +1878,13 @@ class StockfishEngine
                         try
                         {
                             if (!this.master?.game?.controller) return;
-                            const nowPlayingAs = typeof this.master.game.controller.getPlayingAs === "function" ?
-                                this.master.game.controller.getPlayingAs() : null;
-                            const nowTurn = typeof this.master.game.controller.getTurn === "function" ?
-                                this.master.game.controller.getTurn() : null;
-                            const nowFen = typeof this.master.game.controller.getFEN === "function" ?
-                                this.master.game.controller.getFEN() : "";
+                            const nowPlayingAs = normalizeColor(typeof this.master.game.controller.getPlayingAs === "function" ?
+                                this.master.game.controller.getPlayingAs() : null);
+                            const nowTurn = normalizeColor(typeof this.master.game.controller.getTurn === "function" ?
+                                this.master.game.controller.getTurn() : null);
+                            const nowFen = typeof (this.master.game as any).getFenSafe === "function" ?
+                                (this.master.game as any).getFenSafe() :
+                                ((typeof this.master.game.controller.getFEN === "function") ? this.master.game.controller.getFEN() : "");
 
                             if (nowPlayingAs === nowTurn && (!currentFen || nowFen === currentFen))
                             {
@@ -1904,8 +1942,10 @@ class StockfishEngine
         if (persona && persona !== "engine" && this.topMoves.length > 1)
         {
             const bestMove = this.topMoves[0];
-            const fen = (typeof this.master.game.controller?.getFEN === "function") ?
-                this.master.game.controller.getFEN() : "";
+            const fen = typeof (this.master.game as any).getFenSafe === "function" ?
+                (this.master.game as any).getFenSafe() :
+                ((typeof this.master.game.controller?.getFEN === "function") ? this.master.game.controller.getFEN() :
+                ((typeof (this.master.game.controller as any)?.getFen === "function") ? (this.master.game.controller as any).getFen() : ""));
 
             const rawBestScore = bestMove.mate !== null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp ?? 0);
 
@@ -2028,6 +2068,12 @@ var ChromeRequest = (function ()
                         evaluation_bar: true,
                         use_nnue: false,
                         auto_move: false,
+                        adaptive_timing: true,
+                        boss_key_enabled: true,
+                        opening_hud: true,
+                        threat_radar: true,
+                        deep_calc_enabled: true,
+                        persona: "engine",
                         language: "id",
                         stockfishUrl: (document.currentScript as HTMLScriptElement)?.dataset?.stockfishUrl,
                         ecoUrl: (document.currentScript as HTMLScriptElement)?.dataset?.ecoUrl,

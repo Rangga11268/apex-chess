@@ -374,6 +374,9 @@ assert(magnusScore > 20, "Magnus must receive endgame consolidation bonus");
 
 console.log("✓ Grandmaster Persona Emulation (5 Personas + Guardrail) verified");
 
+// 13. Verify Full Diagnostic Suite
+require("./test_diagnostics.js");
+
 console.log("\nALL CHECKS PASSED SUCCESSFULLY!");
 
 
