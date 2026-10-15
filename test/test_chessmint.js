@@ -187,7 +187,15 @@ assert(optionsHtml.includes("preset-stealth"), "options.html must contain preset
 assert(optionsHtml.includes("preset-blitz"), "options.html must contain preset-blitz button");
 assert(optionsHtml.includes("preset-coach"), "options.html must contain preset-coach button");
 assert(optionsHtml.includes("persona-preview-card"), "options.html must contain persona-preview-card");
-console.log("✓ Options HTML UI toggles, Presets, and Persona Card verified");
+assert(optionsHtml.includes("tab-nav"), "options.html must contain tab-nav segmented bar");
+assert(optionsHtml.includes("tab-btn-assist"), "options.html must contain tab-btn-assist");
+assert(optionsHtml.includes("tab-btn-stealth"), "options.html must contain tab-btn-stealth");
+assert(optionsHtml.includes("tab-btn-engine"), "options.html must contain tab-btn-engine");
+assert(optionsHtml.includes("panel-assist"), "options.html must contain panel-assist");
+assert(optionsHtml.includes("panel-stealth"), "options.html must contain panel-stealth");
+assert(optionsHtml.includes("panel-engine"), "options.html must contain panel-engine");
+assert(optionsHtml.includes("options-grid-2col"), "options.html must contain options-grid-2col");
+console.log("✓ Options HTML UI toggles, Presets, Persona Card, and Tab Cockpit verified");
 
 // 10. Verify Opening HUD & Enriched ECO Book
 const ruyLopez = ecoData.find(e => e.eco === "C60");

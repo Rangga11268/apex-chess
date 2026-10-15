@@ -21,7 +21,7 @@
         </div>
         <div class="header-subbar">
             <span class="status-badge" data-i18n="statusSave">Pengaturan tersimpan otomatis</span>
-            <span class="version-tag">v2.2 PRO</span>
+            <span class="version-tag">v2.3 PRO</span>
         </div>
     </div>
 
@@ -32,253 +32,269 @@
             <span class="preset-title" data-i18n="titlePresets">PRESET MODE CEPAT:</span>
             <div class="preset-buttons">
                 <button type="button" class="preset-btn" id="preset-stealth" title="Stealth & Anti-Detection">
-                    <span class="preset-icon">🛡️</span>
+                    <span class="material-icons preset-icon">security</span>
                     <span class="preset-label" data-i18n="presetStealth">Stealth</span>
                 </button>
                 <button type="button" class="preset-btn" id="preset-blitz" title="Speedrun & Rapid/Blitz">
-                    <span class="preset-icon">⚡</span>
+                    <span class="material-icons preset-icon">bolt</span>
                     <span class="preset-label" data-i18n="presetBlitz">Blitz</span>
                 </button>
                 <button type="button" class="preset-btn" id="preset-coach" title="Grandmaster Analysis & Study">
-                    <span class="preset-icon">🧠</span>
+                    <span class="material-icons preset-icon">school</span>
                     <span class="preset-label" data-i18n="presetCoach">Coach</span>
                 </button>
             </div>
         </div>
 
-        <!-- Sliders -->
-        <div class="options-slider" data-min="1" data-max="25">
-            <div class="title" data-i18n-title="titleDepth">KEDALAMAN ENGINE:</div>
-            <input id="option-depth" type="range" value="12" />
-        </div>
+        <!-- Segmented Tab Navigation -->
+        <nav class="tab-nav" role="tablist" aria-label="Settings Categories">
+            <button type="button" class="tab-btn active" id="tab-btn-assist" role="tab" aria-selected="true" aria-controls="panel-assist">
+                <span class="material-icons tab-icon">sports_esports</span>
+                <span data-i18n="tabAssist">Asisten</span>
+            </button>
+            <button type="button" class="tab-btn" id="tab-btn-stealth" role="tab" aria-selected="false" aria-controls="panel-stealth">
+                <span class="material-icons tab-icon">security</span>
+                <span data-i18n="tabStealth">Stealth & Auto</span>
+            </button>
+            <button type="button" class="tab-btn" id="tab-btn-engine" role="tab" aria-selected="false" aria-controls="panel-engine">
+                <span class="material-icons tab-icon">tune</span>
+                <span data-i18n="tabEngine">Mesin</span>
+            </button>
+        </nav>
 
-        <div class="options-slider" data-min="1" data-max="8">
-            <div class="title" data-i18n-title="titleThreads">THREAD CPU:</div>
-            <input id="option-threads" type="range" value="2" />
-        </div>
-
-        <!-- Section Title: Core Analysis -->
-        <div class="section-divider">
-            <span class="divider-line"></span>
-            <span class="divider-text">ANALYSIS & HINTS</span>
-            <span class="divider-line"></span>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-show-hints" type="checkbox" />
-            <label for="option-show-hints">
-                <span data-i18n="labelShowHints">Tampilkan Petunjuk Langkah</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">help_outline</span>
-                    <span class="tooltiptext" data-i18n="tooltipShowHints">Tampilkan panah langkah khusus saat giliran Anda.</span>
-                </div>
-            </label>
-        </div>
-
-        <!-- Hint Mode Selector -->
-        <div class="options-select-row">
-            <div class="select-label-wrap">
-                <span class="select-label" data-i18n="labelHintMode">Gaya Analisis Langkah:</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">help_outline</span>
-                    <span class="tooltiptext" data-i18n="tooltipHintMode">Pilih gaya rekomendasi: melihat spektrum langkah (Brilliant/Great/Inaccuracy/Blunder) atau saran langkah aman anti-deteksi.</span>
-                </div>
-            </div>
-            <select id="option-hint-mode" class="custom-select">
-                <option value="classified" data-i18n="optHintClassified">Spektrum Lengkap (Brilliant → Blunder)</option>
-                <option value="stealth" data-i18n="optHintStealth">Anti-Deteksi (Langkah Humanis & Aman)</option>
-                <option value="best" data-i18n="optHintBest">Langkah Terbaik Saja (Klasik)</option>
-            </select>
-        </div>
-
-        <!-- Grandmaster Persona Selector -->
-        <div class="options-select-row persona-card-row">
-            <div class="select-label-wrap">
-                <span class="select-label" data-i18n="labelPersona">Gaya Master Catur Dunia (Persona):</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">help_outline</span>
-                    <span class="tooltiptext" data-i18n="tooltipPersona">Pilih persona Grandmaster catur dunia legendaris untuk memandu gaya bermain Anda, atau Engine standar.</span>
-                </div>
-            </div>
-            <select id="option-persona" class="custom-select">
-                <option value="engine" data-i18n="optPersonaEngine">Stockfish Murni (Engine Kalkulasi)</option>
-                <option value="magnus" data-i18n="optPersonaMagnus">Magnus Carlsen (Endgame Squeeze & Kontrol)</option>
-                <option value="tal" data-i18n="optPersonaTal">Mikhail Tal (Serangan Taktis & Inisiatif)</option>
-                <option value="kasparov" data-i18n="optPersonaKasparov">Garry Kasparov (Dominasi Pusat & Serangan)</option>
-                <option value="nakamura" data-i18n="optPersonaNakamura">Hikaru Nakamura (Taktik Kilat & Jebakan)</option>
-                <option value="karpov" data-i18n="optPersonaKarpov">Anatoly Karpov (Profilaksis & Cekikan Posisional)</option>
-            </select>
-
-            <!-- Interactive Persona Preview Card -->
-            <div id="persona-preview-card" class="persona-preview-card">
-                <div class="persona-card-header">
-                    <span class="persona-card-icon" id="persona-card-icon">⚡</span>
-                    <div class="persona-card-titles">
-                        <span class="persona-card-name" id="persona-card-name">Stockfish Engine</span>
-                        <span class="persona-card-style" id="persona-card-style">Pure Tactical Calculation</span>
+        <!-- PANEL 1: ASSISTANT / GAMEPLAY -->
+        <div id="panel-assist" class="tab-panel active" role="tabpanel" aria-labelledby="tab-btn-assist">
+            <!-- Grandmaster Persona Selector -->
+            <div class="options-select-row persona-card-row">
+                <div class="select-label-wrap">
+                    <span class="select-label" data-i18n="labelPersona">Gaya Master Catur Dunia:</span>
+                    <div class="tooltip">
+                        <span class="material-icons info-icon">help_outline</span>
+                        <span class="tooltiptext" data-i18n="tooltipPersona">Pilih persona Grandmaster catur legendaris untuk memandu gaya bermain Anda, atau Engine standar.</span>
                     </div>
                 </div>
-                <div class="persona-card-motto" id="persona-card-motto">"Calculates the mathematically optimal line with zero emotion."</div>
-                <div class="persona-card-traits" id="persona-card-traits">
-                    <span class="persona-trait-badge">Calc: 99</span>
-                    <span class="persona-trait-badge">Endgame: 99</span>
-                    <span class="persona-trait-badge">Aggr: 50</span>
+                <select id="option-persona" class="custom-select">
+                    <option value="engine" data-i18n="optPersonaEngine">Stockfish Murni (Engine Kalkulasi)</option>
+                    <option value="magnus" data-i18n="optPersonaMagnus">Magnus Carlsen (Endgame Squeeze & Kontrol)</option>
+                    <option value="tal" data-i18n="optPersonaTal">Mikhail Tal (Serangan Taktis & Inisiatif)</option>
+                    <option value="kasparov" data-i18n="optPersonaKasparov">Garry Kasparov (Dominasi Pusat & Serangan)</option>
+                    <option value="nakamura" data-i18n="optPersonaNakamura">Hikaru Nakamura (Taktik Kilat & Jebakan)</option>
+                    <option value="karpov" data-i18n="optPersonaKarpov">Anatoly Karpov (Profilaksis & Cekikan Posisional)</option>
+                </select>
+
+                <!-- Interactive Persona Preview Card -->
+                <div id="persona-preview-card" class="persona-preview-card">
+                    <div class="persona-card-header">
+                        <span class="material-icons persona-card-icon" id="persona-card-icon">memory</span>
+                        <div class="persona-card-titles">
+                            <span class="persona-card-name" id="persona-card-name">Stockfish Engine</span>
+                            <span class="persona-card-style" id="persona-card-style">Pure Tactical Calculation</span>
+                        </div>
+                    </div>
+                    <div class="persona-card-motto" id="persona-card-motto">"Calculates the mathematically optimal line with zero emotion."</div>
+                    <div class="persona-card-traits" id="persona-card-traits">
+                        <span class="persona-trait-badge">Calc: 99</span>
+                        <span class="persona-trait-badge">Endgame: 99</span>
+                        <span class="persona-trait-badge">Aggr: 50</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hint Mode Selector -->
+            <div class="options-select-row">
+                <div class="select-label-wrap">
+                    <span class="select-label" data-i18n="labelHintMode">Gaya Analisis Langkah:</span>
+                    <div class="tooltip">
+                        <span class="material-icons info-icon">help_outline</span>
+                        <span class="tooltiptext" data-i18n="tooltipHintMode">Pilih gaya rekomendasi: melihat spektrum langkah (Brilliant/Great/Inaccuracy/Blunder) atau saran langkah aman anti-deteksi.</span>
+                    </div>
+                </div>
+                <select id="option-hint-mode" class="custom-select">
+                    <option value="classified" data-i18n="optHintClassified">Spektrum Lengkap (Brilliant → Blunder)</option>
+                    <option value="stealth" data-i18n="optHintStealth">Anti-Deteksi (Langkah Humanis & Aman)</option>
+                    <option value="best" data-i18n="optHintBest">Langkah Terbaik Saja (Klasik)</option>
+                </select>
+            </div>
+
+            <!-- Compact 2-Column Grid for Assist Checkboxes -->
+            <div class="options-grid-2col">
+                <div class="options-checkbox">
+                    <input id="option-show-hints" type="checkbox" />
+                    <label for="option-show-hints">
+                        <span data-i18n="labelShowHints">Petunjuk Langkah</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">help_outline</span>
+                            <span class="tooltiptext" data-i18n="tooltipShowHints">Tampilkan panah langkah khusus saat giliran Anda.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-ghost-arrows" type="checkbox" />
+                    <label for="option-ghost-arrows">
+                        <span data-i18n="labelGhostArrows">Ghost Arrows</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">opacity</span>
+                            <span class="tooltiptext" data-i18n="tooltipGhostArrows">Panah visual lebih lembut dan tembus pandang (30% opacity) agar tidak menutupi petak papan catur.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-evaluation-bar" type="checkbox" />
+                    <label for="option-evaluation-bar">
+                        <span data-i18n="labelEvalBar">Bilah Evaluasi</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">help_outline</span>
+                            <span class="tooltiptext" data-i18n="tooltipEvalBar">Tampilkan keuntungan posisi secara langsung di sisi papan.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-opening-hud" type="checkbox" />
+                    <label for="option-opening-hud">
+                        <span data-i18n="labelOpeningHUD">HUD ECO Book</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">menu_book</span>
+                            <span class="tooltiptext" data-i18n="tooltipOpeningHUD">Tampilkan nama pembukaan resmi dan kode ECO (misal Sicilian, Ruy Lopez) di atas papan catur.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-move-analysis" type="checkbox" />
+                    <label for="option-move-analysis">
+                        <span data-i18n="labelMoveAnalysis">Kualitas Langkah</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">help_outline</span>
+                            <span class="tooltiptext" data-i18n="tooltipMoveAnalysis">Tampilkan badge kualitas: Brilliant, Best Move, Inaccuracy, dll.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-threat-radar" type="checkbox" />
+                    <label for="option-threat-radar">
+                        <span data-i18n="labelThreatRadar">Radar Ancaman</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">radar</span>
+                            <span class="tooltiptext" data-i18n="tooltipThreatRadar">Tandai kotak atau perwira Anda yang sedang diancam oleh taktik serangan terbaik lawan.</span>
+                        </div>
+                    </label>
                 </div>
             </div>
         </div>
 
-        <div class="options-checkbox">
-            <input id="option-move-analysis" type="checkbox" />
-            <label for="option-move-analysis">
-                <span data-i18n="labelMoveAnalysis">Analisis Kualitas Langkah</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">help_outline</span>
-                    <span class="tooltiptext" data-i18n="tooltipMoveAnalysis">Tampilkan badge kualitas: Brilliant, Best Move, Inaccuracy, dll.</span>
+        <!-- PANEL 2: STEALTH & AUTOMATION -->
+        <div id="panel-stealth" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-stealth">
+            <div class="options-checkbox highlight-risk">
+                <input id="option-auto-move" type="checkbox" />
+                <label for="option-auto-move">
+                    <span data-i18n="labelAutoMove">Jalan Otomatis (Auto-Move Humanis)</span>
+                    <div class="tooltip">
+                        <span class="material-icons info-icon">warning_amber</span>
+                        <span class="tooltiptext">
+                            <span data-i18n="tooltipAutoMove">Langkah otomatis dengan jeda alami manusia (800ms-2200ms) dan randomisasi langkah 2.</span>
+                            <br/>
+                            <span style="color:#ff5555; font-weight:600;" data-i18n="warningAutoMove">PERINGATAN: Gunakan hanya untuk latihan melawan bot catur.</span>
+                        </span>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Compact 2-Column Grid for Stealth & Hotkeys -->
+            <div class="options-grid-2col">
+                <div class="options-checkbox">
+                    <input id="option-adaptive-timing" type="checkbox" />
+                    <label for="option-adaptive-timing">
+                        <span data-i18n="labelAdaptiveTiming">Waktu Adaptif</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">speed</span>
+                            <span class="tooltiptext" data-i18n="tooltipAdaptiveTiming">Otomatis mempercepat reaksi engine & jalan otomatis saat bermain Bullet (1m) & Blitz (3m/5m).</span>
+                        </div>
+                    </label>
                 </div>
-            </label>
+
+                <div class="options-checkbox">
+                    <input id="option-blunder-alarm" type="checkbox" />
+                    <label for="option-blunder-alarm">
+                        <span data-i18n="labelBlunderAlarm">Alarm Blunder</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">volume_up</span>
+                            <span class="tooltiptext" data-i18n="tooltipBlunderAlarm">Bunyi audio instan yang halus saat terjadi pergeseran posisi drastis atau blunder fatal lawan (&ge;150 cp).</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-boss-key" type="checkbox" />
+                    <label for="option-boss-key">
+                        <span data-i18n="labelBossKey">Boss Key ('H')</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">visibility_off</span>
+                            <span class="tooltiptext" data-i18n="tooltipBossKey">Tekan tombol H di keyboard untuk menyembunyikan atau memunculkan seluruh bantuan visual seketika (1ms).</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-deep-calc" type="checkbox" />
+                    <label for="option-deep-calc">
+                        <span data-i18n="labelDeepCalc">Deep Calc ('Space')</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">bolt</span>
+                            <span class="tooltiptext" data-i18n="tooltipDeepCalc">Tekan tombol Spasi di keyboard untuk memicu perhitungan Stockfish mendalam (depth 22) di posisi sulit.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-cheat-sheet" type="checkbox" />
+                    <label for="option-cheat-sheet">
+                        <span data-i18n="labelCheatSheet">Shortcut HUD ('?')</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">help</span>
+                            <span class="tooltiptext" data-i18n="tooltipCheatSheet">Tekan tombol tanda tanya (?) di papan catur untuk melihat pop-up pintasan keyboard instan.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="options-checkbox">
+                    <input id="option-depth-bar" type="checkbox" />
+                    <label for="option-depth-bar">
+                        <span data-i18n="labelDepthBar">Bilah Progres</span>
+                        <div class="tooltip">
+                            <span class="material-icons info-icon">help_outline</span>
+                            <span class="tooltiptext" data-i18n="tooltipDepthBar">Tampilkan status progress kalkulasi Stockfish.</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
         </div>
 
-        <div class="options-checkbox">
-            <input id="option-evaluation-bar" type="checkbox" />
-            <label for="option-evaluation-bar">
-                <span data-i18n="labelEvalBar">Bilah Evaluasi (Eval Bar)</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">help_outline</span>
-                    <span class="tooltiptext" data-i18n="tooltipEvalBar">Tampilkan keuntungan posisi secara langsung di sisi papan.</span>
-                </div>
-            </label>
-        </div>
+        <!-- PANEL 3: ENGINE & HARDWARE -->
+        <div id="panel-engine" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-engine">
+            <div class="options-slider" data-min="1" data-max="25">
+                <div class="title" data-i18n-title="titleDepth">KEDALAMAN ENGINE:</div>
+                <input id="option-depth" type="range" value="12" />
+            </div>
 
-        <div class="options-checkbox">
-            <input id="option-depth-bar" type="checkbox" />
-            <label for="option-depth-bar">
-                <span data-i18n="labelDepthBar">Bilah Progres Kalkulasi</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">help_outline</span>
-                    <span class="tooltiptext" data-i18n="tooltipDepthBar">Tampilkan status progress kalkulasi Stockfish.</span>
-                </div>
-            </label>
-        </div>
+            <div class="options-slider" data-min="1" data-max="8">
+                <div class="title" data-i18n-title="titleThreads">THREAD CPU:</div>
+                <input id="option-threads" type="range" value="2" />
+            </div>
 
-        <div class="options-checkbox">
-            <input id="option-opening-hud" type="checkbox" />
-            <label for="option-opening-hud">
-                <span data-i18n="labelOpeningHUD">HUD Nama Pembukaan (ECO Book)</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">menu_book</span>
-                    <span class="tooltiptext" data-i18n="tooltipOpeningHUD">Tampilkan nama pembukaan catur resmi dan kode ECO (misal Sicilian, Ruy Lopez) di atas papan catur.</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-threat-radar" type="checkbox" />
-            <label for="option-threat-radar">
-                <span data-i18n="labelThreatRadar">Radar Ancaman Lawan (Threat Radar)</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">radar</span>
-                    <span class="tooltiptext" data-i18n="tooltipThreatRadar">Tandai kotak atau perwira Anda yang sedang diancam oleh taktik serangan terbaik lawan.</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-ghost-arrows" type="checkbox" />
-            <label for="option-ghost-arrows">
-                <span data-i18n="labelGhostArrows">Panah Transparan Halus (Ghost Arrows)</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">opacity</span>
-                    <span class="tooltiptext" data-i18n="tooltipGhostArrows">Panah visual lebih lembut dan tembus pandang (30% opacity) agar tidak menutupi petak papan catur.</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-blunder-alarm" type="checkbox" />
-            <label for="option-blunder-alarm">
-                <span data-i18n="labelBlunderAlarm">Alarm Nada Blunder (Sound Cue)</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">volume_up</span>
-                    <span class="tooltiptext" data-i18n="tooltipBlunderAlarm">Bunyi audio instan yang halus saat terjadi pergeseran posisi drastis atau blunder fatal lawan (&ge;150 cp).</span>
-                </div>
-            </label>
-        </div>
-
-        <!-- Section Title: Engine Engine & Stealth -->
-        <div class="section-divider">
-            <span class="divider-line"></span>
-            <span class="divider-text">ADVANCED & STEALTH</span>
-            <span class="divider-line"></span>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-use-nnue" type="checkbox" />
-            <label for="option-use-nnue">
-                <span data-i18n="labelUseNNUE">Gunakan Neural Network (NNUE)</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">help_outline</span>
-                    <span class="tooltiptext" data-i18n="tooltipUseNNUE">Evaluasi lebih akurat namun membutuhkan file network ~45MB.</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-adaptive-timing" type="checkbox" />
-            <label for="option-adaptive-timing">
-                <span data-i18n="labelAdaptiveTiming">Waktu Adaptif (Bullet/Blitz Speed-Up)</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">speed</span>
-                    <span class="tooltiptext" data-i18n="tooltipAdaptiveTiming">Otomatis mempercepat reaksi engine & jalan otomatis saat bermain Bullet (1m) & Blitz (3m/5m), dan normalkan saat Rapid/Bot.</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-boss-key" type="checkbox" />
-            <label for="option-boss-key">
-                <span data-i18n="labelBossKey">Tombol Rahasia / Boss Key ('H')</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">visibility_off</span>
-                    <span class="tooltiptext" data-i18n="tooltipBossKey">Tekan tombol H di keyboard untuk menyembunyikan atau memunculkan seluruh bantuan visual seketika (1ms).</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-deep-calc" type="checkbox" />
-            <label for="option-deep-calc">
-                <span data-i18n="labelDeepCalc">Hitung Mendalam Cepat ('Spacebar')</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">bolt</span>
-                    <span class="tooltiptext" data-i18n="tooltipDeepCalc">Tekan tombol Spasi di keyboard untuk memicu perhitungan Stockfish mendalam (depth 22) di posisi sulit.</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox">
-            <input id="option-cheat-sheet" type="checkbox" />
-            <label for="option-cheat-sheet">
-                <span data-i18n="labelCheatSheet">Shortcut Bantuan Cepat ('?')</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">help</span>
-                    <span class="tooltiptext" data-i18n="tooltipCheatSheet">Tekan tombol tanda tanya (?) di papan catur untuk melihat pop-up pintasan keyboard instan.</span>
-                </div>
-            </label>
-        </div>
-
-        <div class="options-checkbox highlight-risk">
-            <input id="option-auto-move" type="checkbox" />
-            <label for="option-auto-move">
-                <span data-i18n="labelAutoMove">Jalan Otomatis (Anti-Cheat Jitter)</span>
-                <div class="tooltip">
-                    <span class="material-icons info-icon">warning_amber</span>
-                    <span class="tooltiptext">
-                        <span data-i18n="tooltipAutoMove">Langkah otomatis dengan jeda alami manusia (800ms-2200ms) dan randomisasi langkah 2.</span>
-                        <br/>
-                        <span style="color:#ff5555; font-weight:600;" data-i18n="warningAutoMove">PERINGATAN: Gunakan hanya untuk latihan melawan bot catur.</span>
-                    </span>
-                </div>
-            </label>
+            <div class="options-checkbox" style="margin-top: 10px;">
+                <input id="option-use-nnue" type="checkbox" />
+                <label for="option-use-nnue">
+                    <span data-i18n="labelUseNNUE">Gunakan Neural Network (NNUE)</span>
+                    <div class="tooltip">
+                        <span class="material-icons info-icon">help_outline</span>
+                        <span class="tooltiptext" data-i18n="tooltipUseNNUE">Evaluasi lebih akurat namun membutuhkan file network ~45MB.</span>
+                    </div>
+                </label>
+            </div>
         </div>
 
     </div>

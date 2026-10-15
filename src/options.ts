@@ -27,6 +27,13 @@ var personaCardStyle: HTMLElement | null;
 var personaCardMotto: HTMLElement | null;
 var personaCardTraits: HTMLElement | null;
 
+var tabBtnAssist: HTMLElement | null;
+var tabBtnStealth: HTMLElement | null;
+var tabBtnEngine: HTMLElement | null;
+var panelAssist: HTMLElement | null;
+var panelStealth: HTMLElement | null;
+var panelEngine: HTMLElement | null;
+
 var currentLanguage: "id" | "en" = "id";
 
 const DefaultExtensionOptions: ExtensionOptions = {
@@ -61,7 +68,7 @@ interface PersonaProfile {
 
 const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
     engine: {
-        icon: "⚡",
+        icon: "memory",
         name: "Stockfish Engine",
         style: {
             id: "Kalkulasi Taktis Murni",
@@ -77,7 +84,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
         }
     },
     magnus: {
-        icon: "👑",
+        icon: "military_tech",
         name: "Magnus Carlsen",
         style: {
             id: "Cekikan Posisi & Ketahanan Endgame",
@@ -93,7 +100,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
         }
     },
     tal: {
-        icon: "🔥",
+        icon: "local_fire_department",
         name: "Mikhail Tal",
         style: {
             id: "Serangan Taktis & Pengorbanan Berani",
@@ -109,7 +116,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
         }
     },
     kasparov: {
-        icon: "⚔️",
+        icon: "security",
         name: "Garry Kasparov",
         style: {
             id: "Dominasi Pusat & Inisiatif Agresif",
@@ -125,7 +132,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
         }
     },
     nakamura: {
-        icon: "⚡",
+        icon: "flash_on",
         name: "Hikaru Nakamura",
         style: {
             id: "Taktik Kilat & Jebakan Praktis",
@@ -141,7 +148,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
         }
     },
     karpov: {
-        icon: "🛡️",
+        icon: "shield",
         name: "Anatoly Karpov",
         style: {
             id: "Profilaksis & Cekikan Posisional",
@@ -359,8 +366,35 @@ const Translations: { [key: string]: TranslationItem } = {
     tooltipCheatSheet: {
         id: "Tekan tombol tanda tanya (?) di papan catur untuk melihat pop-up pintasan keyboard instan.",
         en: "Press the question mark (?) key on the chessboard to reveal instant keyboard shortcuts."
+    },
+    tabAssist: {
+        id: "Asisten",
+        en: "Assist"
+    },
+    tabStealth: {
+        id: "Stealth & Auto",
+        en: "Stealth & Auto"
+    },
+    tabEngine: {
+        id: "Mesin",
+        en: "Engine"
     }
 };
+
+function SwitchTab(tabName: "assist" | "stealth" | "engine")
+{
+    tabBtnAssist?.classList.toggle("active", tabName === "assist");
+    tabBtnAssist?.setAttribute("aria-selected", (tabName === "assist").toString());
+    panelAssist?.classList.toggle("active", tabName === "assist");
+
+    tabBtnStealth?.classList.toggle("active", tabName === "stealth");
+    tabBtnStealth?.setAttribute("aria-selected", (tabName === "stealth").toString());
+    panelStealth?.classList.toggle("active", tabName === "stealth");
+
+    tabBtnEngine?.classList.toggle("active", tabName === "engine");
+    tabBtnEngine?.setAttribute("aria-selected", (tabName === "engine").toString());
+    panelEngine?.classList.toggle("active", tabName === "engine");
+}
 
 function UpdatePersonaCard(personaKey: string)
 {
@@ -568,6 +602,17 @@ function InitOptions()
     btnPresetBlitz = document.getElementById("preset-blitz");
     btnPresetCoach = document.getElementById("preset-coach");
 
+    tabBtnAssist = document.getElementById("tab-btn-assist");
+    tabBtnStealth = document.getElementById("tab-btn-stealth");
+    tabBtnEngine = document.getElementById("tab-btn-engine");
+    panelAssist = document.getElementById("panel-assist");
+    panelStealth = document.getElementById("panel-stealth");
+    panelEngine = document.getElementById("panel-engine");
+
+    if (tabBtnAssist) tabBtnAssist.addEventListener("click", () => SwitchTab("assist"));
+    if (tabBtnStealth) tabBtnStealth.addEventListener("click", () => SwitchTab("stealth"));
+    if (tabBtnEngine) tabBtnEngine.addEventListener("click", () => SwitchTab("engine"));
+
     personaCardIcon = document.getElementById("persona-card-icon");
     personaCardName = document.getElementById("persona-card-name");
     personaCardStyle = document.getElementById("persona-card-style");
@@ -603,6 +648,7 @@ function InitOptions()
             if (inputGhostArrows) inputGhostArrows.checked = true;
             if (inputThreatRadar) inputThreatRadar.checked = true;
             if (inputAdaptiveTiming) inputAdaptiveTiming.checked = true;
+            SwitchTab("assist");
             OnOptionsChange();
         });
     }
@@ -617,6 +663,7 @@ function InitOptions()
             if (inputAdaptiveTiming) inputAdaptiveTiming.checked = true;
             if (inputDeepCalc) inputDeepCalc.checked = true;
             if (inputBossKey) inputBossKey.checked = true;
+            SwitchTab("stealth");
             OnOptionsChange();
         });
     }
@@ -632,6 +679,7 @@ function InitOptions()
             if (inputMoveAnalysis) inputMoveAnalysis.checked = true;
             if (inputEvalBar) inputEvalBar.checked = true;
             if (inputBlunderAlarm) inputBlunderAlarm.checked = true;
+            SwitchTab("assist");
             OnOptionsChange();
         });
     }
