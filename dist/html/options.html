@@ -27,6 +27,25 @@
 
     <div class="container">
 
+        <!-- Quick Presets -->
+        <div class="preset-container" role="group" aria-label="Quick Presets">
+            <span class="preset-title" data-i18n="titlePresets">PRESET MODE CEPAT:</span>
+            <div class="preset-buttons">
+                <button type="button" class="preset-btn" id="preset-stealth" title="Stealth & Anti-Detection">
+                    <span class="preset-icon">🛡️</span>
+                    <span class="preset-label" data-i18n="presetStealth">Stealth</span>
+                </button>
+                <button type="button" class="preset-btn" id="preset-blitz" title="Speedrun & Rapid/Blitz">
+                    <span class="preset-icon">⚡</span>
+                    <span class="preset-label" data-i18n="presetBlitz">Blitz</span>
+                </button>
+                <button type="button" class="preset-btn" id="preset-coach" title="Grandmaster Analysis & Study">
+                    <span class="preset-icon">🧠</span>
+                    <span class="preset-label" data-i18n="presetCoach">Coach</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Sliders -->
         <div class="options-slider" data-min="1" data-max="25">
             <div class="title" data-i18n-title="titleDepth">KEDALAMAN ENGINE:</div>
@@ -89,6 +108,23 @@
                 <option value="nakamura" data-i18n="optPersonaNakamura">Hikaru Nakamura (Taktik Kilat & Jebakan)</option>
                 <option value="karpov" data-i18n="optPersonaKarpov">Anatoly Karpov (Profilaksis & Cekikan Posisional)</option>
             </select>
+
+            <!-- Interactive Persona Preview Card -->
+            <div id="persona-preview-card" class="persona-preview-card">
+                <div class="persona-card-header">
+                    <span class="persona-card-icon" id="persona-card-icon">⚡</span>
+                    <div class="persona-card-titles">
+                        <span class="persona-card-name" id="persona-card-name">Stockfish Engine</span>
+                        <span class="persona-card-style" id="persona-card-style">Pure Tactical Calculation</span>
+                    </div>
+                </div>
+                <div class="persona-card-motto" id="persona-card-motto">"Calculates the mathematically optimal line with zero emotion."</div>
+                <div class="persona-card-traits" id="persona-card-traits">
+                    <span class="persona-trait-badge">Calc: 99</span>
+                    <span class="persona-trait-badge">Endgame: 99</span>
+                    <span class="persona-trait-badge">Aggr: 50</span>
+                </div>
+            </div>
         </div>
 
         <div class="options-checkbox">
@@ -146,6 +182,28 @@
             </label>
         </div>
 
+        <div class="options-checkbox">
+            <input id="option-ghost-arrows" type="checkbox" />
+            <label for="option-ghost-arrows">
+                <span data-i18n="labelGhostArrows">Panah Transparan Halus (Ghost Arrows)</span>
+                <div class="tooltip">
+                    <span class="material-icons info-icon">opacity</span>
+                    <span class="tooltiptext" data-i18n="tooltipGhostArrows">Panah visual lebih lembut dan tembus pandang (30% opacity) agar tidak menutupi petak papan catur.</span>
+                </div>
+            </label>
+        </div>
+
+        <div class="options-checkbox">
+            <input id="option-blunder-alarm" type="checkbox" />
+            <label for="option-blunder-alarm">
+                <span data-i18n="labelBlunderAlarm">Alarm Nada Blunder (Sound Cue)</span>
+                <div class="tooltip">
+                    <span class="material-icons info-icon">volume_up</span>
+                    <span class="tooltiptext" data-i18n="tooltipBlunderAlarm">Bunyi audio instan yang halus saat terjadi pergeseran posisi drastis atau blunder fatal lawan (&ge;150 cp).</span>
+                </div>
+            </label>
+        </div>
+
         <!-- Section Title: Engine Engine & Stealth -->
         <div class="section-divider">
             <span class="divider-line"></span>
@@ -193,6 +251,17 @@
                 <div class="tooltip">
                     <span class="material-icons info-icon">bolt</span>
                     <span class="tooltiptext" data-i18n="tooltipDeepCalc">Tekan tombol Spasi di keyboard untuk memicu perhitungan Stockfish mendalam (depth 22) di posisi sulit.</span>
+                </div>
+            </label>
+        </div>
+
+        <div class="options-checkbox">
+            <input id="option-cheat-sheet" type="checkbox" />
+            <label for="option-cheat-sheet">
+                <span data-i18n="labelCheatSheet">Shortcut Bantuan Cepat ('?')</span>
+                <div class="tooltip">
+                    <span class="material-icons info-icon">help</span>
+                    <span class="tooltiptext" data-i18n="tooltipCheatSheet">Tekan tombol tanda tanya (?) di papan catur untuk melihat pop-up pintasan keyboard instan.</span>
                 </div>
             </label>
         </div>

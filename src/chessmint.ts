@@ -370,6 +370,8 @@ class GameController
     private openingHUD: HTMLElement | null;
     private deepToastTimeout: any;
     private threatMarkings: string[];
+    private lastEvalScore: number | null = null;
+    private cheatSheetModal: HTMLElement | null = null;
     private master: ChessMint;
     private keydownListener: ((e: KeyboardEvent) => void) | null = null;
     isDestroyed: boolean = false;
@@ -650,8 +652,188 @@ class GameController
                 e.preventDefault();
                 this.triggerDeepCalculation();
             }
+            else if ((e.key === "?" || (e.shiftKey && e.code === "Slash")) && this.master.options.cheat_sheet_enabled !== false)
+            {
+                e.preventDefault();
+                this.toggleCheatSheetModal();
+            }
+            else if (e.key === "Escape" && this.cheatSheetModal)
+            {
+                this.toggleCheatSheetModal(false);
+            }
         };
         window.addEventListener("keydown", this.keydownListener);
+    }
+
+    private playBlunderSound(favorable: boolean)
+    {
+        try
+        {
+            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            const startFreq = favorable ? 587.33 : 330;
+            const endFreq = favorable ? 880 : 220;
+            osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + 0.12);
+
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.12);
+        }
+        catch (_) {}
+    }
+
+    toggleCheatSheetModal(force?: boolean)
+    {
+        const shouldShow = force !== undefined ? force : !this.cheatSheetModal;
+        if (!shouldShow)
+        {
+            if (this.cheatSheetModal)
+            {
+                this.cheatSheetModal.remove();
+                this.cheatSheetModal = null;
+            }
+            return;
+        }
+
+        if (this.cheatSheetModal) return;
+
+        const modal = document.createElement("div");
+        modal.className = "apex-cheatsheet-modal";
+        modal.innerHTML = `
+            <div class="apex-cheatsheet-content">
+                <div class="apex-cheatsheet-header">
+                    <span class="apex-cheatsheet-title">⚡ APEX CHESS // SHORTCUTS</span>
+                    <button type="button" class="apex-cheatsheet-close">&times;</button>
+                </div>
+                <div class="apex-cheatsheet-body">
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">H</span>
+                        <span class="apex-key-desc">Boss Key (Sembunyikan / Tampilkan HUD seketika)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">Space</span>
+                        <span class="apex-key-desc">Deep Calculation (Kalkulasi Mendalam Depth 22)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">?</span>
+                        <span class="apex-key-desc">Toggle Shortcut Cheat Sheet</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">Esc</span>
+                        <span class="apex-key-desc">Tutup Menu Ini</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.style.position = "fixed";
+        modal.style.top = "0";
+        modal.style.left = "0";
+        modal.style.width = "100vw";
+        modal.style.height = "100vh";
+        modal.style.background = "rgba(4, 7, 13, 0.75)";
+        modal.style.backdropFilter = "blur(4px)";
+        modal.style.display = "flex";
+        modal.style.alignItems = "center";
+        modal.style.justifyContent = "center";
+        modal.style.zIndex = "999999";
+        modal.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+
+        const content = modal.querySelector(".apex-cheatsheet-content") as HTMLElement;
+        if (content)
+        {
+            content.style.background = "#0d131f";
+            content.style.border = "1px solid rgba(56, 189, 248, 0.3)";
+            content.style.borderRadius = "8px";
+            content.style.padding = "16px 20px";
+            content.style.maxWidth = "360px";
+            content.style.width = "90%";
+            content.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.8)";
+            content.style.color = "#f8fafc";
+        }
+
+        const header = modal.querySelector(".apex-cheatsheet-header") as HTMLElement;
+        if (header)
+        {
+            header.style.display = "flex";
+            header.style.justifyContent = "space-between";
+            header.style.alignItems = "center";
+            header.style.borderBottom = "1px solid rgba(255, 255, 255, 0.08)";
+            header.style.paddingBottom = "10px";
+            header.style.marginBottom = "14px";
+        }
+
+        const title = modal.querySelector(".apex-cheatsheet-title") as HTMLElement;
+        if (title)
+        {
+            title.style.fontSize = "12px";
+            title.style.fontWeight = "800";
+            title.style.letterSpacing = "0.06em";
+            title.style.color = "#38bdf8";
+        }
+
+        const closeBtn = modal.querySelector(".apex-cheatsheet-close") as HTMLElement;
+        if (closeBtn)
+        {
+            closeBtn.style.background = "transparent";
+            closeBtn.style.border = "none";
+            closeBtn.style.color = "#94a3b8";
+            closeBtn.style.fontSize = "20px";
+            closeBtn.style.cursor = "pointer";
+            closeBtn.style.lineHeight = "1";
+            closeBtn.onclick = () => this.toggleCheatSheetModal(false);
+        }
+
+        modal.querySelectorAll(".apex-cheatsheet-row").forEach(r =>
+        {
+            const row = r as HTMLElement;
+            row.style.display = "flex";
+            row.style.alignItems = "center";
+            row.style.gap = "12px";
+            row.style.marginBottom = "10px";
+        });
+
+        modal.querySelectorAll(".apex-key-pill").forEach(k =>
+        {
+            const pill = k as HTMLElement;
+            pill.style.background = "#1e293b";
+            pill.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+            pill.style.color = "#00e5ff";
+            pill.style.fontWeight = "700";
+            pill.style.fontSize = "11px";
+            pill.style.padding = "4px 8px";
+            pill.style.borderRadius = "4px";
+            pill.style.minWidth = "36px";
+            pill.style.textAlign = "center";
+        });
+
+        modal.querySelectorAll(".apex-key-desc").forEach(d =>
+        {
+            const desc = d as HTMLElement;
+            desc.style.fontSize = "12px";
+            desc.style.color = "#cbd5e1";
+            desc.style.lineHeight = "1.3";
+        });
+
+        modal.addEventListener("click", (e) =>
+        {
+            if (e.target === modal)
+            {
+                this.toggleCheatSheetModal(false);
+            }
+        });
+
+        document.body.appendChild(modal);
+        this.cheatSheetModal = modal;
     }
 
     toggleStealthMode(force?: boolean)
@@ -911,6 +1093,11 @@ class GameController
             clearTimeout(this.deepToastTimeout);
             this.deepToastTimeout = null;
         }
+        if (this.cheatSheetModal)
+        {
+            this.cheatSheetModal.remove();
+            this.cheatSheetModal = null;
+        }
     }
 
     HintMoves(topMoves: TopMove[], lastTopMoves: TopMove[], isBestMove: boolean)
@@ -1075,6 +1262,11 @@ class GameController
                     }
                 }
 
+                if (options.ghost_arrows)
+                {
+                    opacity = Math.min(0.35, opacity * 0.45);
+                }
+
                 // Add visual arrow
                 this.currentMarkings.push({
                     data: {
@@ -1185,6 +1377,25 @@ class GameController
 
         this.evalScore.classList.add(classSideAdd);
         this.evalScoreAbbreviated.classList.add(classSideAdd);
+
+        // Blunder sound & visual aura alert
+        if (this.master.options.blunder_alarm && this.lastEvalScore !== null && !isMate)
+        {
+            const playingAs = normalizeColor(typeof this.controller.getPlayingAs === "function" ?
+                this.controller.getPlayingAs() : null);
+            const delta = playingAs === 2 ? (this.lastEvalScore - score) : (score - this.lastEvalScore);
+            if (Math.abs(delta) >= 150)
+            {
+                this.playBlunderSound(delta > 0);
+                if (this.evalBarFill)
+                {
+                    this.evalBarFill.classList.remove("blunder-alert-pulse");
+                    void this.evalBarFill.offsetWidth;
+                    this.evalBarFill.classList.add("blunder-alert-pulse");
+                }
+            }
+        }
+        this.lastEvalScore = score;
     }
 }
 

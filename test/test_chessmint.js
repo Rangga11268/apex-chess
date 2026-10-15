@@ -180,7 +180,14 @@ assert(optionsHtml.includes("option-boss-key"), "options.html must contain optio
 assert(optionsHtml.includes("option-opening-hud"), "options.html must contain option-opening-hud checkbox");
 assert(optionsHtml.includes("option-threat-radar"), "options.html must contain option-threat-radar checkbox");
 assert(optionsHtml.includes("option-deep-calc"), "options.html must contain option-deep-calc checkbox");
-console.log("✓ Options HTML UI toggles verified");
+assert(optionsHtml.includes("option-ghost-arrows"), "options.html must contain option-ghost-arrows checkbox");
+assert(optionsHtml.includes("option-blunder-alarm"), "options.html must contain option-blunder-alarm checkbox");
+assert(optionsHtml.includes("option-cheat-sheet"), "options.html must contain option-cheat-sheet checkbox");
+assert(optionsHtml.includes("preset-stealth"), "options.html must contain preset-stealth button");
+assert(optionsHtml.includes("preset-blitz"), "options.html must contain preset-blitz button");
+assert(optionsHtml.includes("preset-coach"), "options.html must contain preset-coach button");
+assert(optionsHtml.includes("persona-preview-card"), "options.html must contain persona-preview-card");
+console.log("✓ Options HTML UI toggles, Presets, and Persona Card verified");
 
 // 10. Verify Opening HUD & Enriched ECO Book
 const ruyLopez = ecoData.find(e => e.eco === "C60");
@@ -212,7 +219,16 @@ assert(cmCode.includes("updateOpeningHUD"), "chessmint.js must include updateOpe
 const depthbarCss = fs.readFileSync(path.join(distDir, "css", "depthbar.css"), "utf-8");
 assert(depthbarCss.includes("apex-stealth-hidden"), "depthbar.css must include apex-stealth-hidden rules");
 assert(depthbarCss.includes("apex-opening-hud"), "depthbar.css must include apex-opening-hud styles");
-console.log("✓ Boss Key, Threat Radar, and Deep Search verified in build artifacts");
+
+const optionsCss = fs.readFileSync(path.join(distDir, "css", "options.css"), "utf-8");
+assert(optionsCss.includes("preset-container"), "options.css must include preset-container styles");
+assert(optionsCss.includes("persona-preview-card"), "options.css must include persona-preview-card styles");
+assert(optionsCss.includes("blunder-alert-pulse"), "options.css must include blunder-alert-pulse styles");
+
+assert(cmCode.includes("playBlunderSound") || cmCode.includes("AudioContext"), "chessmint.js must include playBlunderSound or AudioContext");
+assert(cmCode.includes("toggleCheatSheetModal") || cmCode.includes("apex-cheatsheet-modal"), "chessmint.js must include cheat sheet modal");
+assert(cmCode.includes("ghost_arrows"), "chessmint.js must include ghost_arrows logic");
+console.log("✓ Boss Key, Threat Radar, Deep Search, and Tactical Pro Pack verified in build artifacts");
 
 // 12. Verify Grandmaster Persona Emulation Engine & Safety Guardrail
 assert(optionsHtml.includes("option-persona"), "options.html must contain option-persona selector");

@@ -272,6 +272,9 @@ interface ExtensionOptions
     threat_radar?: boolean;
     deep_calc_enabled?: boolean;
     persona?: TGrandmasterPersona;
+    ghost_arrows?: boolean;
+    blunder_alarm?: boolean;
+    cheat_sheet_enabled?: boolean;
 }
 
 type TGrandmasterPersona = "engine" | "magnus" | "tal" | "kasparov" | "nakamura" | "karpov";

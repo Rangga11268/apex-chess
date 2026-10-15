@@ -13,8 +13,19 @@ var inputThreatRadar: HTMLInputElement;
 var inputDeepCalc: HTMLInputElement;
 var inputPersona: HTMLSelectElement;
 var inputUseNNUE: HTMLInputElement;
+var inputGhostArrows: HTMLInputElement;
+var inputBlunderAlarm: HTMLInputElement;
+var inputCheatSheet: HTMLInputElement;
 var btnLangId: HTMLElement | null;
 var btnLangEn: HTMLElement | null;
+var btnPresetStealth: HTMLElement | null;
+var btnPresetBlitz: HTMLElement | null;
+var btnPresetCoach: HTMLElement | null;
+var personaCardIcon: HTMLElement | null;
+var personaCardName: HTMLElement | null;
+var personaCardStyle: HTMLElement | null;
+var personaCardMotto: HTMLElement | null;
+var personaCardTraits: HTMLElement | null;
 
 var currentLanguage: "id" | "en" = "id";
 
@@ -35,6 +46,116 @@ const DefaultExtensionOptions: ExtensionOptions = {
     deep_calc_enabled: true,
     persona: "engine",
     language: "id",
+    ghost_arrows: false,
+    blunder_alarm: false,
+    cheat_sheet_enabled: true,
+};
+
+interface PersonaProfile {
+    icon: string;
+    name: string;
+    style: { id: string; en: string };
+    motto: { id: string; en: string };
+    traits: { id: string[]; en: string[] };
+}
+
+const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
+    engine: {
+        icon: "⚡",
+        name: "Stockfish Engine",
+        style: {
+            id: "Kalkulasi Taktis Murni",
+            en: "Pure Tactical Calculation"
+        },
+        motto: {
+            id: "\"Menghitung langkah matematis paling optimal tanpa emosi.\"",
+            en: "\"Calculates the mathematically optimal line with zero emotion.\""
+        },
+        traits: {
+            id: ["Kalkulasi: 99", "Endgame: 99", "Agresi: 50"],
+            en: ["Calculation: 99", "Endgame: 99", "Aggression: 50"]
+        }
+    },
+    magnus: {
+        icon: "👑",
+        name: "Magnus Carlsen",
+        style: {
+            id: "Cekikan Posisi & Ketahanan Endgame",
+            en: "Positional Squeeze & Endgame Master"
+        },
+        motto: {
+            id: "\"Mengubah keunggulan kecil menjadi kemenangan tanpa ampun.\"",
+            en: "\"Converting microscopic edges into merciless endgame victories.\""
+        },
+        traits: {
+            id: ["Endgame: 99", "Presisi: 97", "Kesabaran: 98"],
+            en: ["Endgame: 99", "Precision: 97", "Patience: 98"]
+        }
+    },
+    tal: {
+        icon: "🔥",
+        name: "Mikhail Tal",
+        style: {
+            id: "Serangan Taktis & Pengorbanan Berani",
+            en: "Tactical Fireworks & Magic Sacrifices"
+        },
+        motto: {
+            id: "\"Bawa lawan ke hutan gelap di mana 2+2=5.\"",
+            en: "\"Take your opponent into a deep dark forest where 2+2=5.\""
+        },
+        traits: {
+            id: ["Agresi: 99", "Taktik: 98", "Pengorbanan: 95"],
+            en: ["Aggression: 99", "Tactics: 98", "Sacrifices: 95"]
+        }
+    },
+    kasparov: {
+        icon: "⚔️",
+        name: "Garry Kasparov",
+        style: {
+            id: "Dominasi Pusat & Inisiatif Agresif",
+            en: "Dynamic Initiative & Central Domination"
+        },
+        motto: {
+            id: "\"Serangan tanpa henti dengan penguasaan pembukaan mematikan.\"",
+            en: "\"Relentless dynamic pressure and venomous opening mastery.\""
+        },
+        traits: {
+            id: ["Inisiatif: 99", "Pembukaan: 98", "Tekanan: 96"],
+            en: ["Initiative: 99", "Openings: 98", "Pressure: 96"]
+        }
+    },
+    nakamura: {
+        icon: "⚡",
+        name: "Hikaru Nakamura",
+        style: {
+            id: "Taktik Kilat & Jebakan Praktis",
+            en: "Speed Demon & Sharp Tactical Traps"
+        },
+        motto: {
+            id: "\"Menghukum kesalahan lawan dalam sepersekian detik.\"",
+            en: "\"Punishing opposing inaccuracies in a fraction of a second.\""
+        },
+        traits: {
+            id: ["Kecepatan: 99", "Jebakan: 97", "Fleksibilitas: 95"],
+            en: ["Speed: 99", "Traps: 97", "Flexibility: 95"]
+        }
+    },
+    karpov: {
+        icon: "🛡️",
+        name: "Anatoly Karpov",
+        style: {
+            id: "Profilaksis & Cekikan Posisional",
+            en: "Iron Prophylaxis & Python Constriction"
+        },
+        motto: {
+            id: "\"Membatasi setiap rencana lawan sebelum mereka memikirkannya.\"",
+            en: "\"Preventing every enemy plan before it can even be conceived.\""
+        },
+        traits: {
+            id: ["Profilaksis: 99", "Kontrol: 98", "Soliditas: 97"],
+            en: ["Prophylaxis: 99", "Control: 98", "Solidity: 97"]
+        }
+    }
 };
 
 interface TranslationItem {
@@ -198,8 +319,81 @@ const Translations: { [key: string]: TranslationItem } = {
     optPersonaKarpov: {
         id: "Anatoly Karpov (Profilaksis & Cekikan Posisional)",
         en: "Anatoly Karpov (Prophylaxis & Positional Squeeze)"
+    },
+    titlePresets: {
+        id: "PRESET MODE CEPAT",
+        en: "QUICK PRESETS"
+    },
+    presetStealth: {
+        id: "Stealth",
+        en: "Stealth"
+    },
+    presetBlitz: {
+        id: "Blitz",
+        en: "Blitz"
+    },
+    presetCoach: {
+        id: "Coach",
+        en: "Coach"
+    },
+    labelGhostArrows: {
+        id: "Panah Transparan Halus (Ghost Arrows)",
+        en: "Subtle Ghost Arrows"
+    },
+    tooltipGhostArrows: {
+        id: "Panah visual lebih lembut dan tembus pandang (30% opacity) agar tidak menutupi petak papan catur.",
+        en: "Render softer semi-transparent move arrows (30% opacity) to avoid blocking the board."
+    },
+    labelBlunderAlarm: {
+        id: "Alarm Nada Blunder (Sound Cue)",
+        en: "Blunder Sound Alert"
+    },
+    tooltipBlunderAlarm: {
+        id: "Bunyi audio instan yang halus saat terjadi pergeseran posisi drastis atau blunder fatal lawan (>=150 cp).",
+        en: "Play a subtle audio tick upon a major blunder or drastic positional shift (>=150 cp)."
+    },
+    labelCheatSheet: {
+        id: "Shortcut Bantuan Cepat ('?')",
+        en: "Tactical Cheat Sheet ('?')"
+    },
+    tooltipCheatSheet: {
+        id: "Tekan tombol tanda tanya (?) di papan catur untuk melihat pop-up pintasan keyboard instan.",
+        en: "Press the question mark (?) key on the chessboard to reveal instant keyboard shortcuts."
     }
 };
+
+function UpdatePersonaCard(personaKey: string)
+{
+    const profile = PersonaProfiles[personaKey as TGrandmasterPersona] || PersonaProfiles.engine;
+    if (personaCardIcon) personaCardIcon.textContent = profile.icon;
+    if (personaCardName) personaCardName.textContent = profile.name;
+    if (personaCardStyle) personaCardStyle.textContent = profile.style[currentLanguage];
+    if (personaCardMotto) personaCardMotto.textContent = profile.motto[currentLanguage];
+    if (personaCardTraits)
+    {
+        const traitsContainer = personaCardTraits;
+        traitsContainer.innerHTML = "";
+        const traits = profile.traits[currentLanguage];
+        traits.forEach(trait =>
+        {
+            const badge = document.createElement("span");
+            badge.className = "persona-trait-badge";
+            badge.textContent = trait;
+            traitsContainer.appendChild(badge);
+        });
+    }
+}
+
+function UpdatePresetButtons(options: Partial<ExtensionOptions>)
+{
+    const isStealth = options.hint_mode === "stealth" && !options.auto_move && options.ghost_arrows;
+    const isBlitz = options.auto_move && options.adaptive_timing && options.deep_calc_enabled;
+    const isCoach = options.opening_hud && options.threat_radar && options.move_analysis && options.evaluation_bar && options.blunder_alarm;
+
+    btnPresetStealth?.classList.toggle("active", Boolean(isStealth));
+    btnPresetBlitz?.classList.toggle("active", Boolean(isBlitz));
+    btnPresetCoach?.classList.toggle("active", Boolean(isCoach));
+}
 
 function ApplyLanguage(lang: "id" | "en")
 {
@@ -237,6 +431,11 @@ function ApplyLanguage(lang: "id" | "en")
             (el as HTMLElement).innerText = Translations[key][lang] + ":";
         }
     });
+
+    if (inputPersona)
+    {
+        UpdatePersonaCard(inputPersona.value);
+    }
 }
 
 function RestoreOptions()
@@ -259,9 +458,15 @@ function RestoreOptions()
         inputOpeningHUD.checked = options.opening_hud !== undefined ? options.opening_hud : true;
         inputThreatRadar.checked = options.threat_radar !== undefined ? options.threat_radar : true;
         inputDeepCalc.checked = options.deep_calc_enabled !== undefined ? options.deep_calc_enabled : true;
+        if (inputGhostArrows) inputGhostArrows.checked = Boolean(options.ghost_arrows);
+        if (inputBlunderAlarm) inputBlunderAlarm.checked = Boolean(options.blunder_alarm);
+        if (inputCheatSheet) inputCheatSheet.checked = options.cheat_sheet_enabled !== undefined ? options.cheat_sheet_enabled : true;
 
         currentLanguage = options.language === "en" ? "en" : "id";
         ApplyLanguage(currentLanguage);
+
+        UpdatePresetButtons(options);
+        if (inputPersona) UpdatePersonaCard(inputPersona.value);
 
         let event = new CustomEvent("input");
         (event as any).disableUpdate = true;
@@ -289,7 +494,13 @@ function OnOptionsChange()
         deep_calc_enabled: inputDeepCalc.checked,
         persona: (inputPersona && (inputPersona.value as any)) || "engine",
         language: currentLanguage,
+        ghost_arrows: inputGhostArrows ? inputGhostArrows.checked : false,
+        blunder_alarm: inputBlunderAlarm ? inputBlunderAlarm.checked : false,
+        cheat_sheet_enabled: inputCheatSheet ? inputCheatSheet.checked : true,
     };
+
+    UpdatePresetButtons(options);
+    if (inputPersona) UpdatePersonaCard(inputPersona.value);
 
     chrome.storage.sync.set(options);
 
@@ -347,9 +558,21 @@ function InitOptions()
     inputThreatRadar = document.getElementById("option-threat-radar") as HTMLInputElement;
     inputDeepCalc = document.getElementById("option-deep-calc") as HTMLInputElement;
     inputPersona = document.getElementById("option-persona") as HTMLSelectElement;
+    inputGhostArrows = document.getElementById("option-ghost-arrows") as HTMLInputElement;
+    inputBlunderAlarm = document.getElementById("option-blunder-alarm") as HTMLInputElement;
+    inputCheatSheet = document.getElementById("option-cheat-sheet") as HTMLInputElement;
 
     btnLangId = document.getElementById("lang-btn-id");
     btnLangEn = document.getElementById("lang-btn-en");
+    btnPresetStealth = document.getElementById("preset-stealth");
+    btnPresetBlitz = document.getElementById("preset-blitz");
+    btnPresetCoach = document.getElementById("preset-coach");
+
+    personaCardIcon = document.getElementById("persona-card-icon");
+    personaCardName = document.getElementById("persona-card-name");
+    personaCardStyle = document.getElementById("persona-card-style");
+    personaCardMotto = document.getElementById("persona-card-motto");
+    personaCardTraits = document.getElementById("persona-card-traits");
 
     if (btnLangId)
     {
@@ -365,6 +588,50 @@ function InitOptions()
         btnLangEn.addEventListener("click", () =>
         {
             ApplyLanguage("en");
+            OnOptionsChange();
+        });
+    }
+
+    // 1-Click Preset Handlers
+    if (btnPresetStealth)
+    {
+        btnPresetStealth.addEventListener("click", () =>
+        {
+            if (inputShowHints) inputShowHints.checked = true;
+            if (inputHintMode) inputHintMode.value = "stealth";
+            if (inputAutoMove) inputAutoMove.checked = false;
+            if (inputGhostArrows) inputGhostArrows.checked = true;
+            if (inputThreatRadar) inputThreatRadar.checked = true;
+            if (inputAdaptiveTiming) inputAdaptiveTiming.checked = true;
+            OnOptionsChange();
+        });
+    }
+
+    if (btnPresetBlitz)
+    {
+        btnPresetBlitz.addEventListener("click", () =>
+        {
+            if (inputShowHints) inputShowHints.checked = true;
+            if (inputHintMode) inputHintMode.value = "classified";
+            if (inputAutoMove) inputAutoMove.checked = true;
+            if (inputAdaptiveTiming) inputAdaptiveTiming.checked = true;
+            if (inputDeepCalc) inputDeepCalc.checked = true;
+            if (inputBossKey) inputBossKey.checked = true;
+            OnOptionsChange();
+        });
+    }
+
+    if (btnPresetCoach)
+    {
+        btnPresetCoach.addEventListener("click", () =>
+        {
+            if (inputShowHints) inputShowHints.checked = true;
+            if (inputHintMode) inputHintMode.value = "classified";
+            if (inputOpeningHUD) inputOpeningHUD.checked = true;
+            if (inputThreatRadar) inputThreatRadar.checked = true;
+            if (inputMoveAnalysis) inputMoveAnalysis.checked = true;
+            if (inputEvalBar) inputEvalBar.checked = true;
+            if (inputBlunderAlarm) inputBlunderAlarm.checked = true;
             OnOptionsChange();
         });
     }
