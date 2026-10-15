@@ -60,6 +60,7 @@ const DefaultExtensionOptions: ExtensionOptions = {
 
 interface PersonaProfile {
     icon: string;
+    iconSvg: string;
     name: string;
     style: { id: string; en: string };
     motto: { id: string; en: string };
@@ -69,6 +70,7 @@ interface PersonaProfile {
 const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
     engine: {
         icon: "memory",
+        iconSvg: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>',
         name: "Stockfish Engine",
         style: {
             id: "Kalkulasi Taktis Murni",
@@ -85,6 +87,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
     },
     magnus: {
         icon: "military_tech",
+        iconSvg: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18h14"/><path d="M4 8l4 6 4-6 4 6 4-6v10H4z"/></svg>',
         name: "Magnus Carlsen",
         style: {
             id: "Cekikan Posisi & Ketahanan Endgame",
@@ -101,6 +104,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
     },
     tal: {
         icon: "local_fire_department",
+        iconSvg: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z"/></svg>',
         name: "Mikhail Tal",
         style: {
             id: "Serangan Taktis & Pengorbanan Berani",
@@ -117,6 +121,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
     },
     kasparov: {
         icon: "security",
+        iconSvg: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
         name: "Garry Kasparov",
         style: {
             id: "Dominasi Pusat & Inisiatif Agresif",
@@ -133,6 +138,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
     },
     nakamura: {
         icon: "flash_on",
+        iconSvg: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
         name: "Hikaru Nakamura",
         style: {
             id: "Taktik Kilat & Jebakan Praktis",
@@ -149,6 +155,7 @@ const PersonaProfiles: Record<TGrandmasterPersona, PersonaProfile> = {
     },
     karpov: {
         icon: "shield",
+        iconSvg: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21h16M7 21V7h10v14M6 4h3v3H6zm5 0h2v3h-2zm4 0h3v3h-3z"/></svg>',
         name: "Anatoly Karpov",
         style: {
             id: "Profilaksis & Cekikan Posisional",
@@ -180,8 +187,8 @@ const Translations: { [key: string]: TranslationItem } = {
         en: "CPU THREADS"
     },
     labelShowHints: {
-        id: "Tampilkan Petunjuk Langkah",
-        en: "Show Move Hints"
+        id: "Petunjuk Langkah",
+        en: "Move Hints"
     },
     tooltipShowHints: {
         id: "Tampilkan panah langkah khusus saat giliran Anda.",
@@ -208,24 +215,24 @@ const Translations: { [key: string]: TranslationItem } = {
         en: "Choose hint style: see full spectrum (Brilliant/Great/Inaccuracy/Blunder) or stealth humanized recommendations."
     },
     labelMoveAnalysis: {
-        id: "Analisis Kualitas Langkah",
-        en: "Move Quality Analysis"
+        id: "Kualitas Langkah",
+        en: "Move Quality"
     },
     tooltipMoveAnalysis: {
         id: "Tampilkan badge kualitas: Brilliant, Best Move, Inaccuracy, dll.",
         en: "Show quality badges: Brilliant, Best Move, Inaccuracy, etc."
     },
     labelDepthBar: {
-        id: "Bilah Progres Kalkulasi",
-        en: "Depth Progress Bar"
+        id: "Bilah Progres",
+        en: "Depth Bar"
     },
     tooltipDepthBar: {
         id: "Tampilkan status progress kalkulasi Stockfish.",
         en: "Show progress bar while engine is evaluating."
     },
     labelEvalBar: {
-        id: "Bilah Evaluasi (Eval Bar)",
-        en: "Evaluation Advantage Bar"
+        id: "Bilah Evaluasi",
+        en: "Evaluation Bar"
     },
     tooltipEvalBar: {
         id: "Tampilkan keuntungan posisi secara langsung di sisi papan.",
@@ -240,8 +247,8 @@ const Translations: { [key: string]: TranslationItem } = {
         en: "Higher accuracy evaluation, requires downloading ~45MB file."
     },
     labelAutoMove: {
-        id: "Jalan Otomatis (Anti-Cheat Jitter)",
-        en: "Auto Move (Anti-Cheat Jitter)"
+        id: "Jalan Otomatis (Auto-Move Humanis)",
+        en: "Auto Move (Humanized)"
     },
     tooltipAutoMove: {
         id: "Langkah otomatis dengan jeda alami manusia (800ms-2200ms) dan randomisasi langkah 2.",
@@ -256,48 +263,48 @@ const Translations: { [key: string]: TranslationItem } = {
         en: "Settings saved automatically"
     },
     labelAdaptiveTiming: {
-        id: "Waktu Adaptif (Bullet/Blitz Speed-Up)",
-        en: "Adaptive Timing (Bullet/Blitz Speed-Up)"
+        id: "Waktu Adaptif",
+        en: "Adaptive Timing"
     },
     tooltipAdaptiveTiming: {
         id: "Otomatis mempercepat reaksi engine & jalan otomatis saat bermain Bullet (1m) & Blitz (3m/5m), dan normalkan saat Rapid/Bot.",
         en: "Automatically speeds up engine thinking & auto-play for Bullet (1m) & Blitz (3m/5m), keeping normal timing for Rapid/Bots."
     },
     labelBossKey: {
-        id: "Tombol Rahasia / Boss Key ('H')",
-        en: "Stealth Boss Key ('H')"
+        id: "Boss Key ('H')",
+        en: "Boss Key ('H')"
     },
     tooltipBossKey: {
         id: "Tekan tombol H di keyboard untuk menyembunyikan atau memunculkan seluruh bantuan visual seketika (1ms).",
         en: "Press H key on your keyboard to instantly hide or reveal all visual overlays in 1ms."
     },
     labelOpeningHUD: {
-        id: "HUD Nama Pembukaan (ECO Book)",
-        en: "Opening Name HUD (ECO Book)"
+        id: "HUD ECO Book",
+        en: "Opening HUD"
     },
     tooltipOpeningHUD: {
         id: "Tampilkan nama pembukaan catur resmi dan kode ECO (misal Sicilian, Ruy Lopez) di atas papan catur.",
         en: "Display official opening names and ECO codes (e.g. Sicilian, Ruy Lopez) directly above the board."
     },
     labelThreatRadar: {
-        id: "Radar Ancaman Lawan (Threat Radar)",
-        en: "Opponent Threat Radar"
+        id: "Radar Ancaman",
+        en: "Threat Radar"
     },
     tooltipThreatRadar: {
         id: "Tandai kotak atau perwira Anda yang sedang diancam oleh taktik serangan terbaik lawan.",
         en: "Highlight vulnerable squares or pieces currently targeted by opponent counter-threats."
     },
     labelDeepCalc: {
-        id: "Hitung Mendalam Cepat ('Spacebar')",
-        en: "On-Demand Deep Calc ('Spacebar')"
+        id: "Deep Calc ('Space')",
+        en: "Deep Calc ('Space')"
     },
     tooltipDeepCalc: {
         id: "Tekan tombol Spasi di keyboard untuk memicu perhitungan Stockfish mendalam (depth 22) di posisi sulit.",
         en: "Press Spacebar on your keyboard to trigger a deep Stockfish search (depth 22) in complex positions."
     },
     labelPersona: {
-        id: "Gaya Main Grandmaster Dunia:",
-        en: "Grandmaster Playing Style:"
+        id: "Gaya Master Catur Dunia:",
+        en: "World Master Style:"
     },
     tooltipPersona: {
         id: "Pilih gaya bermain legenda catur dunia: Magnus (Endgame/Squeeze), Tal (Pengorbanan/Serangan), Kasparov (Inisiatif/Pusat), Hikaru (Catur Kilat/Taktik), atau Karpov (Profilaksis).",
@@ -344,24 +351,24 @@ const Translations: { [key: string]: TranslationItem } = {
         en: "Coach"
     },
     labelGhostArrows: {
-        id: "Panah Transparan Halus (Ghost Arrows)",
-        en: "Subtle Ghost Arrows"
+        id: "Ghost Arrows",
+        en: "Ghost Arrows"
     },
     tooltipGhostArrows: {
         id: "Panah visual lebih lembut dan tembus pandang (30% opacity) agar tidak menutupi petak papan catur.",
         en: "Render softer semi-transparent move arrows (30% opacity) to avoid blocking the board."
     },
     labelBlunderAlarm: {
-        id: "Alarm Nada Blunder (Sound Cue)",
-        en: "Blunder Sound Alert"
+        id: "Alarm Blunder",
+        en: "Blunder Alert"
     },
     tooltipBlunderAlarm: {
         id: "Bunyi audio instan yang halus saat terjadi pergeseran posisi drastis atau blunder fatal lawan (>=150 cp).",
         en: "Play a subtle audio tick upon a major blunder or drastic positional shift (>=150 cp)."
     },
     labelCheatSheet: {
-        id: "Shortcut Bantuan Cepat ('?')",
-        en: "Tactical Cheat Sheet ('?')"
+        id: "Shortcut HUD ('?')",
+        en: "Shortcut HUD ('?')"
     },
     tooltipCheatSheet: {
         id: "Tekan tombol tanda tanya (?) di papan catur untuk melihat pop-up pintasan keyboard instan.",
@@ -399,7 +406,7 @@ function SwitchTab(tabName: "assist" | "stealth" | "engine")
 function UpdatePersonaCard(personaKey: string)
 {
     const profile = PersonaProfiles[personaKey as TGrandmasterPersona] || PersonaProfiles.engine;
-    if (personaCardIcon) personaCardIcon.textContent = profile.icon;
+    if (personaCardIcon) personaCardIcon.innerHTML = profile.iconSvg;
     if (personaCardName) personaCardName.textContent = profile.name;
     if (personaCardStyle) personaCardStyle.textContent = profile.style[currentLanguage];
     if (personaCardMotto) personaCardMotto.textContent = profile.motto[currentLanguage];

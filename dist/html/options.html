@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Apex Chess</title>
     <link rel="stylesheet" type="text/css" href="../css/options.css">
-    <link rel="stylesheet" type="text/css" href="../css/material-icon.css">
     <script src="../js/options.js"></script>
 </head>
 
@@ -29,18 +28,18 @@
 
         <!-- Quick Presets -->
         <div class="preset-container" role="group" aria-label="Quick Presets">
-            <span class="preset-title" data-i18n="titlePresets">PRESET MODE CEPAT:</span>
+            <span class="preset-title" data-i18n="titlePresets">PRESET MODE CEPAT</span>
             <div class="preset-buttons">
                 <button type="button" class="preset-btn" id="preset-stealth" title="Stealth & Anti-Detection">
-                    <span class="material-icons preset-icon">security</span>
+                    <svg class="preset-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                     <span class="preset-label" data-i18n="presetStealth">Stealth</span>
                 </button>
                 <button type="button" class="preset-btn" id="preset-blitz" title="Speedrun & Rapid/Blitz">
-                    <span class="material-icons preset-icon">bolt</span>
+                    <svg class="preset-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                     <span class="preset-label" data-i18n="presetBlitz">Blitz</span>
                 </button>
                 <button type="button" class="preset-btn" id="preset-coach" title="Grandmaster Analysis & Study">
-                    <span class="material-icons preset-icon">school</span>
+                    <svg class="preset-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
                     <span class="preset-label" data-i18n="presetCoach">Coach</span>
                 </button>
             </div>
@@ -49,15 +48,15 @@
         <!-- Segmented Tab Navigation -->
         <nav class="tab-nav" role="tablist" aria-label="Settings Categories">
             <button type="button" class="tab-btn active" id="tab-btn-assist" role="tab" aria-selected="true" aria-controls="panel-assist">
-                <span class="material-icons tab-icon">sports_esports</span>
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="4"></rect><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line></svg>
                 <span data-i18n="tabAssist">Asisten</span>
             </button>
             <button type="button" class="tab-btn" id="tab-btn-stealth" role="tab" aria-selected="false" aria-controls="panel-stealth">
-                <span class="material-icons tab-icon">security</span>
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                 <span data-i18n="tabStealth">Stealth & Auto</span>
             </button>
             <button type="button" class="tab-btn" id="tab-btn-engine" role="tab" aria-selected="false" aria-controls="panel-engine">
-                <span class="material-icons tab-icon">tune</span>
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
                 <span data-i18n="tabEngine">Mesin</span>
             </button>
         </nav>
@@ -69,7 +68,7 @@
                 <div class="select-label-wrap">
                     <span class="select-label" data-i18n="labelPersona">Gaya Master Catur Dunia:</span>
                     <div class="tooltip">
-                        <span class="material-icons info-icon">help_outline</span>
+                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         <span class="tooltiptext" data-i18n="tooltipPersona">Pilih persona Grandmaster catur legendaris untuk memandu gaya bermain Anda, atau Engine standar.</span>
                     </div>
                 </div>
@@ -85,7 +84,9 @@
                 <!-- Interactive Persona Preview Card -->
                 <div id="persona-preview-card" class="persona-preview-card">
                     <div class="persona-card-header">
-                        <span class="material-icons persona-card-icon" id="persona-card-icon">memory</span>
+                        <span class="persona-card-icon" id="persona-card-icon">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+                        </span>
                         <div class="persona-card-titles">
                             <span class="persona-card-name" id="persona-card-name">Stockfish Engine</span>
                             <span class="persona-card-style" id="persona-card-style">Pure Tactical Calculation</span>
@@ -105,7 +106,7 @@
                 <div class="select-label-wrap">
                     <span class="select-label" data-i18n="labelHintMode">Gaya Analisis Langkah:</span>
                     <div class="tooltip">
-                        <span class="material-icons info-icon">help_outline</span>
+                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         <span class="tooltiptext" data-i18n="tooltipHintMode">Pilih gaya rekomendasi: melihat spektrum langkah (Brilliant/Great/Inaccuracy/Blunder) atau saran langkah aman anti-deteksi.</span>
                     </div>
                 </div>
@@ -123,7 +124,7 @@
                     <label for="option-show-hints">
                         <span data-i18n="labelShowHints">Petunjuk Langkah</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">help_outline</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipShowHints">Tampilkan panah langkah khusus saat giliran Anda.</span>
                         </div>
                     </label>
@@ -134,7 +135,7 @@
                     <label for="option-ghost-arrows">
                         <span data-i18n="labelGhostArrows">Ghost Arrows</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">opacity</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipGhostArrows">Panah visual lebih lembut dan tembus pandang (30% opacity) agar tidak menutupi petak papan catur.</span>
                         </div>
                     </label>
@@ -145,7 +146,7 @@
                     <label for="option-evaluation-bar">
                         <span data-i18n="labelEvalBar">Bilah Evaluasi</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">help_outline</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipEvalBar">Tampilkan keuntungan posisi secara langsung di sisi papan.</span>
                         </div>
                     </label>
@@ -156,7 +157,7 @@
                     <label for="option-opening-hud">
                         <span data-i18n="labelOpeningHUD">HUD ECO Book</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">menu_book</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipOpeningHUD">Tampilkan nama pembukaan resmi dan kode ECO (misal Sicilian, Ruy Lopez) di atas papan catur.</span>
                         </div>
                     </label>
@@ -167,7 +168,7 @@
                     <label for="option-move-analysis">
                         <span data-i18n="labelMoveAnalysis">Kualitas Langkah</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">help_outline</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipMoveAnalysis">Tampilkan badge kualitas: Brilliant, Best Move, Inaccuracy, dll.</span>
                         </div>
                     </label>
@@ -178,7 +179,7 @@
                     <label for="option-threat-radar">
                         <span data-i18n="labelThreatRadar">Radar Ancaman</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">radar</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipThreatRadar">Tandai kotak atau perwira Anda yang sedang diancam oleh taktik serangan terbaik lawan.</span>
                         </div>
                     </label>
@@ -193,7 +194,7 @@
                 <label for="option-auto-move">
                     <span data-i18n="labelAutoMove">Jalan Otomatis (Auto-Move Humanis)</span>
                     <div class="tooltip">
-                        <span class="material-icons info-icon">warning_amber</span>
+                        <svg class="info-icon info-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         <span class="tooltiptext">
                             <span data-i18n="tooltipAutoMove">Langkah otomatis dengan jeda alami manusia (800ms-2200ms) dan randomisasi langkah 2.</span>
                             <br/>
@@ -210,7 +211,7 @@
                     <label for="option-adaptive-timing">
                         <span data-i18n="labelAdaptiveTiming">Waktu Adaptif</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">speed</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipAdaptiveTiming">Otomatis mempercepat reaksi engine & jalan otomatis saat bermain Bullet (1m) & Blitz (3m/5m).</span>
                         </div>
                     </label>
@@ -221,7 +222,7 @@
                     <label for="option-blunder-alarm">
                         <span data-i18n="labelBlunderAlarm">Alarm Blunder</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">volume_up</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipBlunderAlarm">Bunyi audio instan yang halus saat terjadi pergeseran posisi drastis atau blunder fatal lawan (&ge;150 cp).</span>
                         </div>
                     </label>
@@ -232,7 +233,7 @@
                     <label for="option-boss-key">
                         <span data-i18n="labelBossKey">Boss Key ('H')</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">visibility_off</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipBossKey">Tekan tombol H di keyboard untuk menyembunyikan atau memunculkan seluruh bantuan visual seketika (1ms).</span>
                         </div>
                     </label>
@@ -243,7 +244,7 @@
                     <label for="option-deep-calc">
                         <span data-i18n="labelDeepCalc">Deep Calc ('Space')</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">bolt</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipDeepCalc">Tekan tombol Spasi di keyboard untuk memicu perhitungan Stockfish mendalam (depth 22) di posisi sulit.</span>
                         </div>
                     </label>
@@ -254,7 +255,7 @@
                     <label for="option-cheat-sheet">
                         <span data-i18n="labelCheatSheet">Shortcut HUD ('?')</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">help</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipCheatSheet">Tekan tombol tanda tanya (?) di papan catur untuk melihat pop-up pintasan keyboard instan.</span>
                         </div>
                     </label>
@@ -265,7 +266,7 @@
                     <label for="option-depth-bar">
                         <span data-i18n="labelDepthBar">Bilah Progres</span>
                         <div class="tooltip">
-                            <span class="material-icons info-icon">help_outline</span>
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             <span class="tooltiptext" data-i18n="tooltipDepthBar">Tampilkan status progress kalkulasi Stockfish.</span>
                         </div>
                     </label>
@@ -290,7 +291,7 @@
                 <label for="option-use-nnue">
                     <span data-i18n="labelUseNNUE">Gunakan Neural Network (NNUE)</span>
                     <div class="tooltip">
-                        <span class="material-icons info-icon">help_outline</span>
+                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         <span class="tooltiptext" data-i18n="tooltipUseNNUE">Evaluasi lebih akurat namun membutuhkan file network ~45MB.</span>
                     </div>
                 </label>
