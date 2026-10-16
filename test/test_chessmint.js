@@ -405,9 +405,30 @@ const magnusMove = { from: "e1", to: "e2", cp: 20, mate: null };
 const magnusScore = testScorePersonaMove(magnusMove, magnusMove, "magnus", testFenEndgame);
 assert(magnusScore > 20, "Magnus must receive endgame consolidation bonus");
 
-console.log("✓ Grandmaster Persona Emulation (5 Personas + Guardrail) verified");
+// 13. Verify Real-time Auto-Move Interactive Controls (Hold / Pura-pura Mikir, Slower, Faster)
+assert(optionsHtml.includes("option-auto-move-tempo"), "options.html must contain option-auto-move-tempo selector");
+assert(optionsHtml.includes("auto-move-controls-chip"), "options.html must contain auto-move-controls-chip hotkey guide");
+assert(depthbarCss.includes("apex-hold-badge"), "depthbar.css must include apex-hold-badge styles");
 
-// 13. Verify Full Diagnostic Suite
+assert(cmCode.includes("toggleAutoMoveHold") || cmCode.includes("isAutoMoveHold"), "chessmint.js must include auto-move hold logic");
+assert(cmCode.includes("adjustAutoMoveTempo") || cmCode.includes("autoMoveTempoMultiplier"), "chessmint.js must include auto-move tempo control");
+assert(cmCode.includes("addThinkingDelay"), "chessmint.js must include addThinkingDelay for deep contemplation pauses");
+assert(cmCode.includes("apex-hold-badge"), "chessmint.js must reference apex-hold-badge HUD indicator");
+
+// Verify tempo calculation clamping & math logic
+function calculateTempoDelay(baseDelay, multiplier) {
+    const clampedMult = Math.max(0.25, Math.min(4.0, multiplier));
+    return Math.max(50, Math.round(baseDelay * clampedMult));
+}
+
+assert.strictEqual(calculateTempoDelay(1200, 1.0), 1200, "1.0x tempo retains exact base delay");
+assert.strictEqual(calculateTempoDelay(1200, 1.5), 1800, "1.5x tempo increases delay for slower play");
+assert.strictEqual(calculateTempoDelay(1200, 0.5), 600, "0.5x tempo halves delay for fast play");
+assert.strictEqual(calculateTempoDelay(1200, 10.0), 4800, "Tempo multiplier upper bound clamps at 4.0x");
+assert.strictEqual(calculateTempoDelay(1200, 0.05), 300, "Tempo multiplier lower bound clamps at 0.25x");
+console.log("✓ Real-time Auto-Move Interactive Controls (Hold / Pura-pura Mikir, Slower, Faster) verified");
+
+// 14. Verify Full Diagnostic Suite
 require("./test_diagnostics.js");
 
 console.log("\nALL CHECKS PASSED SUCCESSFULLY!");

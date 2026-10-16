@@ -652,6 +652,31 @@ class GameController
                 e.preventDefault();
                 this.triggerDeepCalculation();
             }
+            else if (e.key.toLowerCase() === "p")
+            {
+                e.preventDefault();
+                this.master.engine?.toggleAutoMoveHold();
+            }
+            else if (e.key.toLowerCase() === "t")
+            {
+                e.preventDefault();
+                this.master.engine?.addThinkingDelay(3000);
+            }
+            else if (e.key === "[" || (e.shiftKey && e.code === "BracketLeft"))
+            {
+                e.preventDefault();
+                this.master.engine?.adjustAutoMoveTempo(1.35, "slower");
+            }
+            else if (e.key === "]" || (e.shiftKey && e.code === "BracketRight"))
+            {
+                e.preventDefault();
+                this.master.engine?.adjustAutoMoveTempo(0.75, "faster");
+            }
+            else if (e.key === "\\" || e.key === "0")
+            {
+                e.preventDefault();
+                this.master.engine?.adjustAutoMoveTempo(1.0, "reset");
+            }
             else if ((e.key === "?" || (e.shiftKey && e.code === "Slash")) && this.master.options.cheat_sheet_enabled !== false)
             {
                 e.preventDefault();
@@ -722,6 +747,26 @@ class GameController
                     <div class="apex-cheatsheet-row">
                         <span class="apex-key-pill">Space</span>
                         <span class="apex-key-desc">Deep Calculation (Kalkulasi Mendalam Depth 22)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">P</span>
+                        <span class="apex-key-desc">Hold / Pura-pura Mikir (Tahan / Lanjut Auto-Move)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">[</span>
+                        <span class="apex-key-desc">Play Slower (Perlambat Tempo Auto-Move)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">]</span>
+                        <span class="apex-key-desc">Play Faster (Percepat Tempo Auto-Move)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">T</span>
+                        <span class="apex-key-desc">Pura-pura Mikir (+3s jeda tambahan)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">\\</span>
+                        <span class="apex-key-desc">Reset Tempo ke 1.0x Normal</span>
                     </div>
                     <div class="apex-cheatsheet-row">
                         <span class="apex-key-pill">?</span>
@@ -1416,6 +1461,11 @@ class StockfishEngine
     private lastTopMoves: TopMove[];
     private lastMoveScore: TEffectType | null;
     private autoMoveTimeout: any = null;
+    public isAutoMoveHold: boolean = false;
+    public autoMoveTempoMultiplier: number = 1.0;
+    private pendingAutoMove: { moveData: any; currentFen: string; chosenMove: any } | null = null;
+    private autoMoveHoldBadge: HTMLElement | null = null;
+    private activeDelayMs: number = 0;
 
     private options: { [opt: string]: string | number | boolean; };
 
@@ -1436,6 +1486,7 @@ class StockfishEngine
         this.isInTheory = false;
         this.lastMoveScore = null;
         this.autoMoveTimeout = null;
+        this.autoMoveTempoMultiplier = this.master.options.auto_move_tempo || 1.0;
 
         this.threads = this.master.options.threads || 2;
         this.depth = this.master.options.depth || 15;
@@ -1700,6 +1751,14 @@ class StockfishEngine
             clearTimeout(this.autoMoveTimeout);
             this.autoMoveTimeout = null;
         }
+        if (this.autoMoveHoldBadge)
+        {
+            this.autoMoveHoldBadge.remove();
+            this.autoMoveHoldBadge = null;
+        }
+        this.pendingAutoMove = null;
+        this.isAutoMoveHold = false;
+
         if (this.stockfish)
         {
             try
@@ -1762,8 +1821,151 @@ class StockfishEngine
             this.threads = this.master.options.threads;
             this.send(`setoption name Threads value ${this.threads}`);
         }
+        if (this.master.options.auto_move_tempo)
+        {
+            this.autoMoveTempoMultiplier = this.master.options.auto_move_tempo;
+        }
         if (this.topMoves.length > 0)
             this.onTopMoves(null, !this.isEvaluating);
+    }
+
+    public executeMoveIfValid(moveData: any, expectedFen?: string)
+    {
+        try
+        {
+            if (!this.master?.game?.controller) return;
+            const nowPlayingAs = normalizeColor(typeof this.master.game.controller.getPlayingAs === "function" ?
+                this.master.game.controller.getPlayingAs() : null);
+            const nowTurn = normalizeColor(typeof this.master.game.controller.getTurn === "function" ?
+                this.master.game.controller.getTurn() : null);
+            const nowFen = typeof (this.master.game as any).getFenSafe === "function" ?
+                (this.master.game as any).getFenSafe() :
+                ((typeof this.master.game.controller.getFEN === "function") ? this.master.game.controller.getFEN() : "");
+
+            if (nowPlayingAs === nowTurn && (!expectedFen || nowFen === expectedFen))
+            {
+                if (typeof this.master.game.controller.move === "function")
+                {
+                    this.master.game.controller.move(moveData);
+                }
+            }
+        }
+        catch (err)
+        {
+            console.error("ChessMint: Error executing move:", err);
+        }
+    }
+
+    public toggleAutoMoveHold(force?: boolean)
+    {
+        this.isAutoMoveHold = force !== undefined ? force : !this.isAutoMoveHold;
+
+        if (this.isAutoMoveHold)
+        {
+            if (this.autoMoveTimeout)
+            {
+                clearTimeout(this.autoMoveTimeout);
+                this.autoMoveTimeout = null;
+            }
+            this.updateHoldBadge(this.pendingAutoMove?.chosenMove);
+            showApexHUDToast("⏸️ AUTO-MOVE DI-HOLD (Pura-pura mikir...) [Tekan 'P' atau Klik untuk melangkah]", 3200);
+        }
+        else
+        {
+            this.updateHoldBadge();
+            showApexHUDToast("▶️ RESUME AUTO-MOVE: Melangkah sekarang!", 2000);
+            if (this.pendingAutoMove)
+            {
+                const { moveData, currentFen } = this.pendingAutoMove;
+                this.pendingAutoMove = null;
+                setTimeout(() => {
+                    this.executeMoveIfValid(moveData, currentFen);
+                }, 280);
+            }
+        }
+    }
+
+    public addThinkingDelay(extraMs = 3000)
+    {
+        if (this.autoMoveTimeout && this.pendingAutoMove)
+        {
+            clearTimeout(this.autoMoveTimeout);
+            this.activeDelayMs += extraMs;
+            const remainingDelay = Math.max(400, this.activeDelayMs);
+            showApexHUDToast(`🧠 Pura-pura Mikir: +${extraMs / 1000}s (Total jeda ~${(remainingDelay / 1000).toFixed(1)}s)`, 2400);
+
+            const { moveData, currentFen } = this.pendingAutoMove;
+            this.autoMoveTimeout = setTimeout(() => {
+                this.autoMoveTimeout = null;
+                this.pendingAutoMove = null;
+                this.executeMoveIfValid(moveData, currentFen);
+            }, remainingDelay);
+        }
+        else
+        {
+            showApexHUDToast(`🧠 Pura-pura Mikir: Siap +${extraMs / 1000}s ekstra pada giliran berikutnya`, 2200);
+        }
+    }
+
+    public adjustAutoMoveTempo(factor: number, label: string)
+    {
+        if (factor === 1)
+        {
+            this.autoMoveTempoMultiplier = 1.0;
+            showApexHUDToast(`🎯 Tempo Reset: 1.0x (Normal Adaptif)`, 2200);
+            return;
+        }
+
+        this.autoMoveTempoMultiplier = Math.max(0.25, Math.min(4.0, Number((this.autoMoveTempoMultiplier * factor).toFixed(2))));
+        const desc = this.autoMoveTempoMultiplier > 1.0 ? "Lebih Santai / Slower" : (this.autoMoveTempoMultiplier < 1.0 ? "Lebih Cepat / Faster" : "Normal");
+        const icon = factor > 1 ? "🐢" : "⚡";
+
+        showApexHUDToast(`${icon} Tempo Auto-Move: ${this.autoMoveTempoMultiplier}x (${desc})`, 2200);
+
+        if (this.autoMoveTimeout && this.pendingAutoMove && !this.isAutoMoveHold)
+        {
+            clearTimeout(this.autoMoveTimeout);
+            const newDelay = Math.max(120, Math.round(this.activeDelayMs * factor));
+            this.activeDelayMs = newDelay;
+            const { moveData, currentFen } = this.pendingAutoMove;
+            this.autoMoveTimeout = setTimeout(() => {
+                this.autoMoveTimeout = null;
+                this.pendingAutoMove = null;
+                this.executeMoveIfValid(moveData, currentFen);
+            }, newDelay);
+        }
+    }
+
+    public updateHoldBadge(move?: any)
+    {
+        try
+        {
+            if (!this.isAutoMoveHold)
+            {
+                if (this.autoMoveHoldBadge)
+                {
+                    this.autoMoveHoldBadge.remove();
+                    this.autoMoveHoldBadge = null;
+                }
+                return;
+            }
+
+            if (!this.autoMoveHoldBadge)
+            {
+                this.autoMoveHoldBadge = document.createElement("div");
+                this.autoMoveHoldBadge.className = "apex-hold-badge";
+                this.autoMoveHoldBadge.onclick = () => this.toggleAutoMoveHold(false);
+                document.body.appendChild(this.autoMoveHoldBadge);
+            }
+
+            const moveHint = move ? ` (${move.from}→${move.to})` : "";
+            this.autoMoveHoldBadge.innerHTML = `
+                <span style="font-size: 14px;">⏸️</span>
+                <span><b>AUTO-MOVE DI-HOLD</b>${moveHint} — Pura-pura mikir...</span>
+                <span style="background: rgba(245, 158, 11, 0.25); border: 1px solid rgba(245, 158, 11, 0.5); padding: 2px 7px; border-radius: 12px; font-size: 11px; margin-left: 4px;">Tekan 'P' atau Klik untuk Jalan</span>
+            `;
+        }
+        catch (_) {}
     }
 
     private UpdateOptions(options: { [opt: string]: string | number | boolean; } | null = null)
@@ -2148,32 +2350,23 @@ class StockfishEngine
                             delay += pauseBoost;
                         }
                     }
+
+                    // Apply real-time user tempo multiplier
+                    delay = Math.max(50, Math.round(delay * this.autoMoveTempoMultiplier));
+                    this.activeDelayMs = delay;
+                    this.pendingAutoMove = { moveData, currentFen, chosenMove: finalMove };
+
+                    if (this.isAutoMoveHold)
+                    {
+                        this.updateHoldBadge(finalMove);
+                        return;
+                    }
+
                     this.autoMoveTimeout = setTimeout(() =>
                     {
                         this.autoMoveTimeout = null;
-                        try
-                        {
-                            if (!this.master?.game?.controller) return;
-                            const nowPlayingAs = normalizeColor(typeof this.master.game.controller.getPlayingAs === "function" ?
-                                this.master.game.controller.getPlayingAs() : null);
-                            const nowTurn = normalizeColor(typeof this.master.game.controller.getTurn === "function" ?
-                                this.master.game.controller.getTurn() : null);
-                            const nowFen = typeof (this.master.game as any).getFenSafe === "function" ?
-                                (this.master.game as any).getFenSafe() :
-                                ((typeof this.master.game.controller.getFEN === "function") ? this.master.game.controller.getFEN() : "");
-
-                            if (nowPlayingAs === nowTurn && (!currentFen || nowFen === currentFen))
-                            {
-                                if (typeof this.master.game.controller.move === "function")
-                                {
-                                    this.master.game.controller.move(moveData);
-                                }
-                            }
-                        }
-                        catch (err)
-                        {
-                            console.error("ChessMint: Error executing move:", err);
-                        }
+                        this.pendingAutoMove = null;
+                        this.executeMoveIfValid(moveData, currentFen);
                     }, delay);
                 }
             }

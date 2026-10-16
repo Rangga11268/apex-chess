@@ -204,6 +204,32 @@
                 </label>
             </div>
 
+            <!-- Auto-Move Speed / Tempo Control Row -->
+            <div class="options-select-row" style="margin-bottom: 6px;">
+                <div class="select-label-wrap">
+                    <span class="select-label" data-i18n="labelAutoMoveTempo">Tempo Awal Auto-Move:</span>
+                    <div class="tooltip">
+                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <span class="tooltiptext" data-i18n="tooltipAutoMoveTempo">Kecepatan awal auto-move. Saat main dapat diatur langsung: '[' Play Slower, ']' Play Faster, 'P' Hold/Mikir, 'T' +3s.</span>
+                    </div>
+                </div>
+                <select id="option-auto-move-tempo" class="custom-select">
+                    <option value="1.0" data-i18n="optTempoNormal">Normal Adaptif (1.0x Default)</option>
+                    <option value="1.5" data-i18n="optTempoSlow">Santai / Humanis (1.5x Slower)</option>
+                    <option value="2.0" data-i18n="optTempoUltraSlow">Sangat Santai (2.0x Slower)</option>
+                    <option value="0.7" data-i18n="optTempoFast">Cepat / Blitz (0.7x Faster)</option>
+                </select>
+            </div>
+
+            <!-- Auto-Move Quick Hotkey Banner -->
+            <div class="auto-move-controls-chip">
+                <span class="chip-badge">HOTKEYS AUTO:</span>
+                <span class="chip-item"><b>P</b> Hold/Mikir</span>
+                <span class="chip-item"><b>[</b> Slower</span>
+                <span class="chip-item"><b>]</b> Faster</span>
+                <span class="chip-item"><b>T</b> +3s</span>
+            </div>
+
             <!-- Compact 2-Column Grid for Stealth & Hotkeys -->
             <div class="options-grid-2col">
                 <div class="options-checkbox">

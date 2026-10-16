@@ -16,6 +16,7 @@ var inputUseNNUE: HTMLInputElement;
 var inputGhostArrows: HTMLInputElement;
 var inputBlunderAlarm: HTMLInputElement;
 var inputCheatSheet: HTMLInputElement;
+var inputAutoMoveTempo: HTMLSelectElement;
 var btnLangId: HTMLElement | null;
 var btnLangEn: HTMLElement | null;
 var btnPresetStealth: HTMLElement | null;
@@ -56,6 +57,7 @@ const DefaultExtensionOptions: ExtensionOptions = {
     ghost_arrows: false,
     blunder_alarm: false,
     cheat_sheet_enabled: true,
+    auto_move_tempo: 1.0,
 };
 
 interface PersonaProfile {
@@ -257,6 +259,30 @@ const Translations: { [key: string]: TranslationItem } = {
     warningAutoMove: {
         id: "PERINGATAN: Gunakan hanya untuk latihan melawan bot catur.",
         en: "WARNING: Use only against chess bots for practice."
+    },
+    labelAutoMoveTempo: {
+        id: "Tempo Awal Auto-Move:",
+        en: "Auto-Move Initial Tempo:"
+    },
+    tooltipAutoMoveTempo: {
+        id: "Kecepatan awal auto-move. Saat main dapat diatur langsung: '[' Play Slower, ']' Play Faster, 'P' Hold/Mikir, 'T' +3s.",
+        en: "Initial tempo speed for auto-move. Can be adjusted on-the-fly: '[' Play Slower, ']' Play Faster, 'P' Hold/Think, 'T' +3s."
+    },
+    optTempoNormal: {
+        id: "Normal Adaptif (1.0x Default)",
+        en: "Adaptive Normal (1.0x Default)"
+    },
+    optTempoSlow: {
+        id: "Santai / Humanis (1.5x Slower)",
+        en: "Relaxed / Human (1.5x Slower)"
+    },
+    optTempoUltraSlow: {
+        id: "Sangat Santai (2.0x Slower)",
+        en: "Very Relaxed (2.0x Slower)"
+    },
+    optTempoFast: {
+        id: "Cepat / Blitz (0.7x Faster)",
+        en: "Fast / Blitz (0.7x Faster)"
     },
     statusSave: {
         id: "Pengaturan tersimpan otomatis",
@@ -502,6 +528,7 @@ function RestoreOptions()
         if (inputGhostArrows) inputGhostArrows.checked = Boolean(options.ghost_arrows);
         if (inputBlunderAlarm) inputBlunderAlarm.checked = Boolean(options.blunder_alarm);
         if (inputCheatSheet) inputCheatSheet.checked = options.cheat_sheet_enabled !== undefined ? options.cheat_sheet_enabled : true;
+        if (inputAutoMoveTempo) inputAutoMoveTempo.value = (options.auto_move_tempo || 1.0).toString();
 
         currentLanguage = options.language === "en" ? "en" : "id";
         ApplyLanguage(currentLanguage);
@@ -538,6 +565,7 @@ function OnOptionsChange()
         ghost_arrows: inputGhostArrows ? inputGhostArrows.checked : false,
         blunder_alarm: inputBlunderAlarm ? inputBlunderAlarm.checked : false,
         cheat_sheet_enabled: inputCheatSheet ? inputCheatSheet.checked : true,
+        auto_move_tempo: inputAutoMoveTempo ? parseFloat(inputAutoMoveTempo.value) : 1.0,
     };
 
     UpdatePresetButtons(options);
@@ -602,6 +630,7 @@ function InitOptions()
     inputGhostArrows = document.getElementById("option-ghost-arrows") as HTMLInputElement;
     inputBlunderAlarm = document.getElementById("option-blunder-alarm") as HTMLInputElement;
     inputCheatSheet = document.getElementById("option-cheat-sheet") as HTMLInputElement;
+    inputAutoMoveTempo = document.getElementById("option-auto-move-tempo") as HTMLSelectElement;
 
     btnLangId = document.getElementById("lang-btn-id");
     btnLangEn = document.getElementById("lang-btn-en");
@@ -702,6 +731,14 @@ function InitOptions()
     if (inputPersona)
     {
         inputPersona.addEventListener("change", () =>
+        {
+            OnOptionsChange();
+        });
+    }
+
+    if (inputAutoMoveTempo)
+    {
+        inputAutoMoveTempo.addEventListener("change", () =>
         {
             OnOptionsChange();
         });
