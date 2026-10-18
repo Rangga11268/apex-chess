@@ -1302,6 +1302,7 @@ class GameController
         this.RemoveCurrentMarkings();
         this.ClearAnalysisMarkings();
         this.clearThreatMarkings();
+        this.lastEvalScore = null;
         this.master.engine?.resetAutoMoveSession();
         this.UpdateEngine(true);
     }
@@ -1610,8 +1611,8 @@ class GameController
         if (options.evaluation_bar)
         {
             let score = (bestMove.mate != null ? bestMove.mate : bestMove.cp) as number;
-            let currentTurn = typeof this.controller.getTurn === "function" ? this.controller.getTurn() : 1;
-            if (currentTurn == 2) score *= -1;
+            let currentTurn = normalizeColor(typeof this.controller.getTurn === "function" ? this.controller.getTurn() : null) ?? 1;
+            if (currentTurn === 2) score *= -1;
 
             this.SetEvaluation(score, bestMove.mate != null);
         }
@@ -3016,6 +3017,10 @@ var ChromeRequest = (function ()
                         deep_calc_enabled: true,
                         persona: "engine",
                         language: "id",
+                        ghost_arrows: false,
+                        blunder_alarm: false,
+                        cheat_sheet_enabled: true,
+                        auto_move_tempo: 1.0,
                         accuracy_profile: "casual",
                         tactical_sacrifices: true,
                         stockfishUrl: (document.currentScript as HTMLScriptElement)?.dataset?.stockfishUrl,

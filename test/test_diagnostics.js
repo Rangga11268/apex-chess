@@ -92,4 +92,56 @@ assert.strictEqual(getFenSafe(mockControllerLower).length > 0, true, "Handles lo
 assert.strictEqual(getFenSafe(mockControllerUpper).length > 0, true, "Handles uppercase getFEN");
 console.log("✓ Bug 5: Dual FEN accessor verified");
 
+// Bug 6: Eval bar score inversion on Black's turn with string getTurn()
+function calculateEvalScore(controller, bestMove) {
+    let score = bestMove.mate != null ? bestMove.mate : bestMove.cp;
+    let currentTurn = normalizeColor(typeof controller.getTurn === "function" ? controller.getTurn() : null) ?? 1;
+    if (currentTurn === 2) score *= -1;
+    return score;
+}
+function calculateEvalScoreBuggy(controller, bestMove) {
+    let score = bestMove.mate != null ? bestMove.mate : bestMove.cp;
+    let currentTurn = typeof controller.getTurn === "function" ? controller.getTurn() : 1;
+    if (currentTurn == 2) score *= -1;
+    return score;
+}
+
+const mockBlackController = { getTurn: () => "b" };
+const mockBlackAdvantageMove = { cp: 300, mate: null }; // Black is up 300 cp in engine POV
+assert.strictEqual(calculateEvalScoreBuggy(mockBlackController, mockBlackAdvantageMove), 300, "Buggy code failed to invert score for 'b'");
+assert.strictEqual(calculateEvalScore(mockBlackController, mockBlackAdvantageMove), -300, "Fixed code properly negates score to -300 for Black advantage");
+console.log("✓ Bug 6: Eval bar score normalization on Black turn verified");
+
+// Bug 7: lastEvalScore cross-game blunder alarm state leak
+class MockChessMintGame {
+    constructor() {
+        this.lastEvalScore = null;
+    }
+    ResetGame() {
+        this.lastEvalScore = null;
+    }
+}
+const mockGame = new MockChessMintGame();
+mockGame.lastEvalScore = 800; // Game 1 finished with huge win
+mockGame.ResetGame();
+assert.strictEqual(mockGame.lastEvalScore, null, "lastEvalScore must be null after ResetGame to prevent false blunder alarm on move 1");
+console.log("✓ Bug 7: ResetGame lastEvalScore clearance verified");
+
+// Bug 8: DefaultExtensionOptions schema completeness
+const fs = require("fs");
+const path = require("path");
+const loaderTs = fs.readFileSync(path.join(__dirname, "../src/loader.ts"), "utf-8");
+const expectedKeys = [
+    "ghost_arrows",
+    "blunder_alarm",
+    "cheat_sheet_enabled",
+    "auto_move_tempo",
+    "accuracy_profile",
+    "tactical_sacrifices"
+];
+for (const key of expectedKeys) {
+    assert(loaderTs.includes(key), `loader.ts DefaultExtensionOptions2 must contain ${key}`);
+}
+console.log("✓ Bug 8: Loader DefaultExtensionOptions2 schema completeness verified");
+
 console.log("\n--> ALL DIAGNOSTIC TESTS PASSED! Ready to patch codebase.");

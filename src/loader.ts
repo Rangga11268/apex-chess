@@ -17,6 +17,12 @@ const DefaultExtensionOptions2: ExtensionOptions = {
     deep_calc_enabled: true,
     persona: "engine",
     language: "id",
+    ghost_arrows: false,
+    blunder_alarm: false,
+    cheat_sheet_enabled: true,
+    auto_move_tempo: 1.0,
+    accuracy_profile: "casual",
+    tactical_sacrifices: true,
 };
 
 function injectScript(file: string)
