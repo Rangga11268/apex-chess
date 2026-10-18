@@ -232,10 +232,28 @@
                 </select>
             </div>
 
+            <!-- Target Accuracy Profile Control Row -->
+            <div class="options-select-row" style="margin-bottom: 6px;">
+                <div class="select-label-wrap">
+                    <span class="select-label" data-i18n="labelAccuracyProfile">Batas Akurasi Humanis:</span>
+                    <div class="tooltip">
+                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <span class="tooltiptext" data-i18n="tooltipAccuracyProfile">Batasi akurasi agar wajar seperti manusia biasa (72-78% Elo 1000-1400) dan tidak terdeteksi curang 90%+. Mode GM/Uncapped tetap tersedia jika ingin kekuatan penuh.</span>
+                    </div>
+                </div>
+                <select id="option-accuracy-profile" class="custom-select">
+                    <option value="casual" data-i18n="optAccuracyCasual">Normal / Santai (~72% - 78% Akurasi, Elo 1000-1400) ★ Rekomendasi</option>
+                    <option value="intermediate" data-i18n="optAccuracyIntermediate">Club Player (~78% - 84% Akurasi, Elo 1500-1800)</option>
+                    <option value="master" data-i18n="optAccuracyMaster">Master / Semi-Pro (~85% - 90% Akurasi, Elo 1900-2200)</option>
+                    <option value="gm_unlimited" data-i18n="optAccuracyGM">GM / Bebas Batas (92%+ Akurasi Maksimal)</option>
+                </select>
+            </div>
+
             <!-- Auto-Move Quick Hotkey Banner -->
             <div class="auto-move-controls-chip">
                 <span class="chip-badge">HOTKEYS AUTO:</span>
                 <span class="chip-item"><b>P</b> Hold/Mikir</span>
+                <span class="chip-item"><b>A</b> Akurasi</span>
                 <span class="chip-item"><b>S</b> Sacrifices</span>
                 <span class="chip-item"><b>[</b> Slower</span>
                 <span class="chip-item"><b>]</b> Faster</span>

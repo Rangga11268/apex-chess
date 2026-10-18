@@ -277,6 +277,7 @@ interface ExtensionOptions
     cheat_sheet_enabled?: boolean;
     auto_move_tempo?: number;
     tactical_sacrifices?: boolean;
+    accuracy_profile?: "casual" | "intermediate" | "master" | "gm_unlimited";
 }
 
 type TGrandmasterPersona = "engine" | "magnus" | "tal" | "kasparov" | "nakamura" | "karpov";

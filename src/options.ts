@@ -17,6 +17,7 @@ var inputGhostArrows: HTMLInputElement;
 var inputBlunderAlarm: HTMLInputElement;
 var inputCheatSheet: HTMLInputElement;
 var inputAutoMoveTempo: HTMLSelectElement;
+var inputAccuracyProfile: HTMLSelectElement;
 var inputTacticalSacrifices: HTMLInputElement;
 var btnLangId: HTMLElement | null;
 var btnLangEn: HTMLElement | null;
@@ -59,6 +60,7 @@ const DefaultExtensionOptions: ExtensionOptions = {
     blunder_alarm: false,
     cheat_sheet_enabled: true,
     auto_move_tempo: 1.0,
+    accuracy_profile: "casual",
     tactical_sacrifices: true,
 };
 
@@ -285,6 +287,30 @@ const Translations: { [key: string]: TranslationItem } = {
     optTempoFast: {
         id: "Cepat / Blitz (0.7x Faster)",
         en: "Fast / Blitz (0.7x Faster)"
+    },
+    labelAccuracyProfile: {
+        id: "Batas Akurasi Humanis:",
+        en: "Human Accuracy Cap:"
+    },
+    tooltipAccuracyProfile: {
+        id: "Batasi akurasi agar wajar seperti manusia biasa (72-78% Elo 1000-1400) dan tidak terdeteksi curang 90%+. Mode GM/Uncapped tetap tersedia jika ingin kekuatan penuh.",
+        en: "Cap match accuracy to realistic human levels (72-78% for Elo 1000-1400) to prevent 90%+ cheat detection flags. GM/Uncapped mode is available for full engine strength."
+    },
+    optAccuracyCasual: {
+        id: "Normal / Santai (~72% - 78% Akurasi, Elo 1000-1400) ★ Rekomendasi",
+        en: "Casual / Normal (~72% - 78% Accuracy, Elo 1000-1400) ★ Recommended"
+    },
+    optAccuracyIntermediate: {
+        id: "Club Player (~78% - 84% Akurasi, Elo 1500-1800)",
+        en: "Club Player (~78% - 84% Accuracy, Elo 1500-1800)"
+    },
+    optAccuracyMaster: {
+        id: "Master / Semi-Pro (~85% - 90% Akurasi, Elo 1900-2200)",
+        en: "Master / Semi-Pro (~85% - 90% Accuracy, Elo 1900-2200)"
+    },
+    optAccuracyGM: {
+        id: "GM / Bebas Batas (92%+ Akurasi Maksimal)",
+        en: "GM / Uncapped (92%+ Maximum Accuracy)"
     },
     statusSave: {
         id: "Pengaturan tersimpan otomatis",
@@ -539,6 +565,7 @@ function RestoreOptions()
         if (inputBlunderAlarm) inputBlunderAlarm.checked = Boolean(options.blunder_alarm);
         if (inputCheatSheet) inputCheatSheet.checked = options.cheat_sheet_enabled !== undefined ? options.cheat_sheet_enabled : true;
         if (inputAutoMoveTempo) inputAutoMoveTempo.value = (options.auto_move_tempo || 1.0).toString();
+        if (inputAccuracyProfile) inputAccuracyProfile.value = options.accuracy_profile || "casual";
         if (inputTacticalSacrifices) inputTacticalSacrifices.checked = options.tactical_sacrifices !== undefined ? options.tactical_sacrifices : true;
 
         currentLanguage = options.language === "en" ? "en" : "id";
@@ -577,6 +604,7 @@ function OnOptionsChange()
         blunder_alarm: inputBlunderAlarm ? inputBlunderAlarm.checked : false,
         cheat_sheet_enabled: inputCheatSheet ? inputCheatSheet.checked : true,
         auto_move_tempo: inputAutoMoveTempo ? parseFloat(inputAutoMoveTempo.value) : 1.0,
+        accuracy_profile: (inputAccuracyProfile && (inputAccuracyProfile.value as any)) || "casual",
         tactical_sacrifices: inputTacticalSacrifices ? inputTacticalSacrifices.checked : true,
     };
 
@@ -643,6 +671,7 @@ function InitOptions()
     inputBlunderAlarm = document.getElementById("option-blunder-alarm") as HTMLInputElement;
     inputCheatSheet = document.getElementById("option-cheat-sheet") as HTMLInputElement;
     inputAutoMoveTempo = document.getElementById("option-auto-move-tempo") as HTMLSelectElement;
+    inputAccuracyProfile = document.getElementById("option-accuracy-profile") as HTMLSelectElement;
     inputTacticalSacrifices = document.getElementById("option-tactical-sacrifices") as HTMLInputElement;
 
     btnLangId = document.getElementById("lang-btn-id");
@@ -752,6 +781,14 @@ function InitOptions()
     if (inputAutoMoveTempo)
     {
         inputAutoMoveTempo.addEventListener("change", () =>
+        {
+            OnOptionsChange();
+        });
+    }
+
+    if (inputAccuracyProfile)
+    {
+        inputAccuracyProfile.addEventListener("change", () =>
         {
             OnOptionsChange();
         });

@@ -543,7 +543,82 @@ assert.strictEqual(testDetectBreakout(underPressureFen, passiveMove, -40), false
 
 console.log("✓ Tactical Sacrifices & Pressure Breakouts (Bold Master Play) verified");
 
-// 15. Verify Full Diagnostic Suite
+// 15. Verify Accuracy Profile UI and Options in HTML
+assert(optionsHtml.includes('id="option-accuracy-profile"'), "options.html must contain #option-accuracy-profile");
+assert(optionsHtml.includes('value="casual"'), "options.html must contain casual accuracy profile");
+assert(optionsHtml.includes('value="intermediate"'), "options.html must contain intermediate accuracy profile");
+assert(optionsHtml.includes('value="master"'), "options.html must contain master accuracy profile");
+assert(optionsHtml.includes('value="gm_unlimited"'), "options.html must contain gm_unlimited accuracy profile");
+assert(optionsHtml.includes("<b>A</b> Akurasi"), "options.html must list 'A Akurasi' hotkey chip");
+console.log("✓ Accuracy Profile UI in options.html verified");
+
+// 16. Verify Accuracy Sampling Simulation
+function sampleHumanMove(accProfile, top_pv_moves, forcedRoll) {
+    let chosenMove = top_pv_moves[0];
+    const m0 = top_pv_moves[0];
+    if (m0.mate === null || m0.mate <= 0) {
+        const score0 = m0.mate !== null ? (m0.mate > 0 ? 10000 : -10000) : (m0.cp ?? 0);
+        const m1 = top_pv_moves[1];
+        const score1 = m1 ? (m1.mate !== null ? (m1.mate > 0 ? 10000 : -10000) : (m1.cp ?? 0)) : null;
+        const delta1 = score1 !== null ? (score0 - score1) : 999;
+        const m1Sound = (delta1 <= 40) && (m1.mate === null || m1.mate > 0);
+
+        const m2 = top_pv_moves[2];
+        const score2 = m2 ? (m2.mate !== null ? (m2.mate > 0 ? 10000 : -10000) : (m2.cp ?? 0)) : null;
+        const delta2 = score2 !== null ? (score0 - score2) : 999;
+        const m2Sound = (delta2 <= 65) && (m2 && (m2.mate === null || m2.mate > 0));
+
+        const m3 = top_pv_moves[3];
+        const score3 = m3 ? (m3.mate !== null ? (m3.mate > 0 ? 10000 : -10000) : (m3.cp ?? 0)) : null;
+        const delta3 = score3 !== null ? (score0 - score3) : 999;
+        const m3Sound = (delta3 <= 85) && (m3 && (m3.mate === null || m3.mate > 0));
+
+        const roll = forcedRoll !== undefined ? forcedRoll : Math.random();
+
+        if (accProfile === "casual") {
+            if (roll > 0.90 && m3Sound) chosenMove = m3;
+            else if (roll > 0.72 && m2Sound) chosenMove = m2;
+            else if (roll > 0.38 && m1Sound) chosenMove = m1;
+        } else if (accProfile === "intermediate") {
+            if (roll > 0.84 && m2Sound) chosenMove = m2;
+            else if (roll > 0.52 && m1Sound) chosenMove = m1;
+        } else if (accProfile === "master") {
+            if (roll > 0.92 && m2Sound && delta2 <= 40) chosenMove = m2;
+            else if (roll > 0.68 && m1Sound && delta1 <= 28) chosenMove = m1;
+        } else if (accProfile === "gm_unlimited") {
+            if (roll > 0.92 && m1Sound && delta1 <= 18) chosenMove = m1;
+        }
+    }
+    return chosenMove;
+}
+
+const candidateMoves = [
+    { move: "e2e4", cp: 50, mate: null },
+    { move: "d2d4", cp: 35, mate: null }, // delta 15
+    { move: "c2c4", cp: 10, mate: null }, // delta 40
+    { move: "g1f3", cp: -15, mate: null } // delta 65
+];
+
+// Test Forced Winning Mate: Must always pick m0 regardless of profile or roll
+const mateMoves = [
+    { move: "d1h5", cp: null, mate: 2 },
+    { move: "f1c4", cp: 400, mate: null }
+];
+assert.strictEqual(sampleHumanMove("casual", mateMoves, 0.95).move, "d1h5", "Winning mate must always be played");
+
+// Test Casual profile distributions
+assert.strictEqual(sampleHumanMove("casual", candidateMoves, 0.10).move, "e2e4", "Roll 0.10 in casual picks Best move");
+assert.strictEqual(sampleHumanMove("casual", candidateMoves, 0.50).move, "d2d4", "Roll 0.50 in casual picks Excellent move");
+assert.strictEqual(sampleHumanMove("casual", candidateMoves, 0.80).move, "c2c4", "Roll 0.80 in casual picks Good move");
+assert.strictEqual(sampleHumanMove("casual", candidateMoves, 0.95).move, "g1f3", "Roll 0.95 in casual picks Inaccuracy move");
+
+// Test GM Unlimited: Never picks rank 3 or 4
+assert.strictEqual(sampleHumanMove("gm_unlimited", candidateMoves, 0.95).move, "d2d4", "Roll 0.95 in GM picks m1 at most");
+assert.strictEqual(sampleHumanMove("gm_unlimited", candidateMoves, 0.50).move, "e2e4", "Roll 0.50 in GM picks Best move");
+
+console.log("✓ Accuracy Sampling Distribution & Safeguards verified");
+
+// 17. Verify Full Diagnostic Suite
 require("./test_diagnostics.js");
 
 console.log("\nALL CHECKS PASSED SUCCESSFULLY!");

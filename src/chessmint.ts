@@ -832,6 +832,35 @@ class GameController
                     chrome.storage.sync.set({ tactical_sacrifices: isEnabled });
                 }
             }
+            else if (e.key.toLowerCase() === "a")
+            {
+                e.preventDefault();
+                const profiles: Array<"casual" | "intermediate" | "master" | "gm_unlimited"> = [
+                    "casual",
+                    "intermediate",
+                    "master",
+                    "gm_unlimited"
+                ];
+                const current = this.master.options.accuracy_profile || "casual";
+                const nextIndex = (profiles.indexOf(current) + 1) % profiles.length;
+                const nextProfile = profiles[nextIndex];
+                this.master.options.accuracy_profile = nextProfile;
+
+                const isId = this.master.options.language === "id";
+                const profileNames: Record<string, { id: string; en: string }> = {
+                    casual: { id: "🎯 Akurasi: Normal / Santai (~72-78% Elo 1000-1400)", en: "🎯 Accuracy: Casual / Normal (~72-78% Elo 1000-1400)" },
+                    intermediate: { id: "🎯 Akurasi: Club Player (~78-84% Elo 1500-1800)", en: "🎯 Accuracy: Club Player (~78-84% Elo 1500-1800)" },
+                    master: { id: "🎯 Akurasi: Master (~85-90% Elo 1900-2200)", en: "🎯 Accuracy: Master (~85-90% Elo 1900-2200)" },
+                    gm_unlimited: { id: "⚡ Akurasi: GM / Bebas Batas (92%+ Maksimal)", en: "⚡ Accuracy: GM / Uncapped (92%+ Maximum)" }
+                };
+                const msg = isId ? profileNames[nextProfile].id : profileNames[nextProfile].en;
+                showApexHUDToast(msg, 2400);
+
+                if (typeof chrome !== "undefined" && chrome.storage?.sync)
+                {
+                    chrome.storage.sync.set({ accuracy_profile: nextProfile });
+                }
+            }
             else if ((e.key === "?" || (e.shiftKey && e.code === "Slash")) && this.master.options.cheat_sheet_enabled !== false)
             {
                 e.preventDefault();
@@ -906,6 +935,10 @@ class GameController
                     <div class="apex-cheatsheet-row">
                         <span class="apex-key-pill">S</span>
                         <span class="apex-key-desc">Pengorbanan Berani (Toggle GM Sacrifices & Breakouts)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">A</span>
+                        <span class="apex-key-desc">Batas Akurasi Humanis (Casual 75% ➔ Club 80% ➔ Master 88% ➔ GM 95%)</span>
                     </div>
                     <div class="apex-cheatsheet-row">
                         <span class="apex-key-pill">P</span>
@@ -2478,34 +2511,83 @@ class StockfishEngine
                     }
                 }
 
-                // If no sacrifice or breakout was selected, apply standard anti-cheat calibration
-                if (!chosenSacInfo && (!chosenBreakoutCandidate || chosenMove !== chosenBreakoutCandidate) && !usePersona && !budget.forceBestMove && top_pv_moves.length > 1)
+                // If no sacrifice or breakout was selected, apply human accuracy profile calibration
+                const accProfile = this.master.options.accuracy_profile || "casual";
+                if (!chosenSacInfo && (!chosenBreakoutCandidate || chosenMove !== chosenBreakoutCandidate) && !budget.forceBestMove && top_pv_moves.length > 1)
                 {
                     const m0 = top_pv_moves[0];
-                    const score0 = m0.mate !== null ? (m0.mate > 0 ? 10000 : -10000) : (m0.cp ?? 0);
-
                     // If m0 is a winning forced mate, always play it
                     if (m0.mate === null || m0.mate <= 0)
                     {
+                        const score0 = m0.mate !== null ? (m0.mate > 0 ? 10000 : -10000) : (m0.cp ?? 0);
                         const m1 = top_pv_moves[1];
-                        const score1 = m1.mate !== null ? (m1.mate > 0 ? 10000 : -10000) : (m1.cp ?? 0);
-                        const delta1 = score0 - score1;
-                        const m1Sound = delta1 <= 32 && (m1.mate === null || m1.mate > 0);
+                        const score1 = m1 ? (m1.mate !== null ? (m1.mate > 0 ? 10000 : -10000) : (m1.cp ?? 0)) : null;
+                        const delta1 = score1 !== null ? (score0 - score1) : 999;
+                        const m1Sound = (delta1 <= 40) && (m1.mate === null || m1.mate > 0);
 
                         const m2 = top_pv_moves[2];
                         const score2 = m2 ? (m2.mate !== null ? (m2.mate > 0 ? 10000 : -10000) : (m2.cp ?? 0)) : null;
                         const delta2 = score2 !== null ? (score0 - score2) : 999;
-                        const m2Sound = delta2 <= 48 && (m2 && (m2.mate === null || m2.mate > 0));
+                        const m2Sound = (delta2 <= 65) && (m2 && (m2.mate === null || m2.mate > 0));
 
-                        // Realistic human Master distribution: ~55% Best Move, ~32% Excellent (#2), ~13% Good (#3)
+                        const m3 = top_pv_moves[3];
+                        const score3 = m3 ? (m3.mate !== null ? (m3.mate > 0 ? 10000 : -10000) : (m3.cp ?? 0)) : null;
+                        const delta3 = score3 !== null ? (score0 - score3) : 999;
+                        const m3Sound = (delta3 <= 85) && (m3 && (m3.mate === null || m3.mate > 0));
+
                         const roll = Math.random();
-                        if (roll > 0.87 && m2Sound)
+
+                        if (accProfile === "casual")
                         {
-                            chosenMove = m2;
+                            // Casual / Normal human profile (72% - 78% accuracy, Elo 1000-1400)
+                            // 38% Best, 34% Excellent (m1), 18% Good (m2), 10% minor sound inaccuracy (m3)
+                            if (roll > 0.90 && m3Sound)
+                            {
+                                chosenMove = m3;
+                            }
+                            else if (roll > 0.72 && m2Sound)
+                            {
+                                chosenMove = m2;
+                            }
+                            else if (roll > 0.38 && m1Sound)
+                            {
+                                chosenMove = m1;
+                            }
                         }
-                        else if (roll > 0.55 && m1Sound)
+                        else if (accProfile === "intermediate")
                         {
-                            chosenMove = m1;
+                            // Intermediate / Club player profile (78% - 84% accuracy, Elo 1500-1800)
+                            // 52% Best, 32% Excellent (m1), 16% Good (m2)
+                            if (roll > 0.84 && m2Sound)
+                            {
+                                chosenMove = m2;
+                            }
+                            else if (roll > 0.52 && m1Sound)
+                            {
+                                chosenMove = m1;
+                            }
+                        }
+                        else if (accProfile === "master")
+                        {
+                            // Master / Semi-pro profile (85% - 90% accuracy, Elo 1900-2200)
+                            // 68% Best, 24% Excellent (m1), 8% Good (m2)
+                            if (roll > 0.92 && m2Sound && delta2 <= 40)
+                            {
+                                chosenMove = m2;
+                            }
+                            else if (roll > 0.68 && m1Sound && delta1 <= 28)
+                            {
+                                chosenMove = m1;
+                            }
+                        }
+                        else if (accProfile === "gm_unlimited")
+                        {
+                            // GM / Uncapped profile (92%+ max accuracy)
+                            // 92% Best, 8% Excellent (m1)
+                            if (roll > 0.92 && m1Sound && delta1 <= 18)
+                            {
+                                chosenMove = m1;
+                            }
                         }
                     }
                 }
@@ -2782,6 +2864,7 @@ var ChromeRequest = (function ()
                         deep_calc_enabled: true,
                         persona: "engine",
                         language: "id",
+                        accuracy_profile: "casual",
                         tactical_sacrifices: true,
                         stockfishUrl: (document.currentScript as HTMLScriptElement)?.dataset?.stockfishUrl,
                         ecoUrl: (document.currentScript as HTMLScriptElement)?.dataset?.ecoUrl,
