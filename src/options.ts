@@ -17,6 +17,7 @@ var inputGhostArrows: HTMLInputElement;
 var inputBlunderAlarm: HTMLInputElement;
 var inputCheatSheet: HTMLInputElement;
 var inputAutoMoveTempo: HTMLSelectElement;
+var inputTacticalSacrifices: HTMLInputElement;
 var btnLangId: HTMLElement | null;
 var btnLangEn: HTMLElement | null;
 var btnPresetStealth: HTMLElement | null;
@@ -58,6 +59,7 @@ const DefaultExtensionOptions: ExtensionOptions = {
     blunder_alarm: false,
     cheat_sheet_enabled: true,
     auto_move_tempo: 1.0,
+    tactical_sacrifices: true,
 };
 
 interface PersonaProfile {
@@ -320,6 +322,14 @@ const Translations: { [key: string]: TranslationItem } = {
         id: "Tandai kotak atau perwira Anda yang sedang diancam oleh taktik serangan terbaik lawan.",
         en: "Highlight vulnerable squares or pieces currently targeted by opponent counter-threats."
     },
+    labelTacticalSacrifices: {
+        id: "Pengorbanan Berani (GM Sacrifices)",
+        en: "Bold Sacrifices (GM Tactics)"
+    },
+    tooltipTacticalSacrifices: {
+        id: "Deteksi pengorbanan perwira ala GM Tal/Kasparov (Greek gift, exchange sac) & breakout saat tertekan agar permainan tidak monoton.",
+        en: "Detect GM-style piece sacrifices (Greek gift, exchange sacs) & counter-attack breakouts under pressure to eliminate monotonous play."
+    },
     labelDeepCalc: {
         id: "Deep Calc ('Space')",
         en: "Deep Calc ('Space')"
@@ -529,6 +539,7 @@ function RestoreOptions()
         if (inputBlunderAlarm) inputBlunderAlarm.checked = Boolean(options.blunder_alarm);
         if (inputCheatSheet) inputCheatSheet.checked = options.cheat_sheet_enabled !== undefined ? options.cheat_sheet_enabled : true;
         if (inputAutoMoveTempo) inputAutoMoveTempo.value = (options.auto_move_tempo || 1.0).toString();
+        if (inputTacticalSacrifices) inputTacticalSacrifices.checked = options.tactical_sacrifices !== undefined ? options.tactical_sacrifices : true;
 
         currentLanguage = options.language === "en" ? "en" : "id";
         ApplyLanguage(currentLanguage);
@@ -566,6 +577,7 @@ function OnOptionsChange()
         blunder_alarm: inputBlunderAlarm ? inputBlunderAlarm.checked : false,
         cheat_sheet_enabled: inputCheatSheet ? inputCheatSheet.checked : true,
         auto_move_tempo: inputAutoMoveTempo ? parseFloat(inputAutoMoveTempo.value) : 1.0,
+        tactical_sacrifices: inputTacticalSacrifices ? inputTacticalSacrifices.checked : true,
     };
 
     UpdatePresetButtons(options);
@@ -631,6 +643,7 @@ function InitOptions()
     inputBlunderAlarm = document.getElementById("option-blunder-alarm") as HTMLInputElement;
     inputCheatSheet = document.getElementById("option-cheat-sheet") as HTMLInputElement;
     inputAutoMoveTempo = document.getElementById("option-auto-move-tempo") as HTMLSelectElement;
+    inputTacticalSacrifices = document.getElementById("option-tactical-sacrifices") as HTMLInputElement;
 
     btnLangId = document.getElementById("lang-btn-id");
     btnLangEn = document.getElementById("lang-btn-en");

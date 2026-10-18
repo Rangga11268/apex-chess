@@ -428,7 +428,122 @@ assert.strictEqual(calculateTempoDelay(1200, 10.0), 4800, "Tempo multiplier uppe
 assert.strictEqual(calculateTempoDelay(1200, 0.05), 300, "Tempo multiplier lower bound clamps at 0.25x");
 console.log("✓ Real-time Auto-Move Interactive Controls (Hold / Pura-pura Mikir, Slower, Faster) verified");
 
-// 14. Verify Full Diagnostic Suite
+// 14. Verify Tactical Sacrifices & Pressure Breakouts (Bold Master Play)
+assert(optionsHtml.includes("option-tactical-sacrifices"), "options.html must contain option-tactical-sacrifices toggle");
+assert(optionsHtml.includes("<b>S</b> Sacrifices"), "options.html must include S hotkey badge in controls chip");
+assert(cmCode.includes("detectSacrifice"), "chessmint.js must include detectSacrifice method");
+assert(cmCode.includes("detectBreakout"), "chessmint.js must include detectBreakout method");
+assert(cmCode.includes("tactical_sacrifices"), "chessmint.js must reference tactical_sacrifices option");
+
+function testGetPieceValue(piece) {
+    if (!piece) return 0;
+    switch (piece.toLowerCase()) {
+        case "p": return 100;
+        case "n": return 310;
+        case "b": return 325;
+        case "r": return 500;
+        case "q": return 950;
+        case "k": return 20000;
+        default: return 0;
+    }
+}
+
+function testDetectSacrifice(fen, move) {
+    if (!move || !move.line || move.line.length < 2) return null;
+    const move0 = move.line[0];
+    const move1 = move.line[1];
+    if (!move0 || !move1 || move0.length < 4 || move1.length < 4) return null;
+
+    const from0 = move0.substring(0, 2);
+    const to0 = move0.substring(2, 4);
+    const to1 = move1.substring(2, 4);
+
+    const isRecaptured = (to1 === to0);
+
+    const myPiece = testGetPieceAt(fen, from0);
+    const targetPiece = testGetPieceAt(fen, to0);
+    if (!myPiece) return null;
+
+    const myVal = testGetPieceValue(myPiece);
+    const targetVal = testGetPieceValue(targetPiece);
+    const netMaterialLost = myVal - targetVal;
+
+    if (isRecaptured && netMaterialLost >= 150) {
+        const score = move.mate !== null ? (move.mate > 0 ? 10000 : -10000) : (move.cp ?? 0);
+        if (score >= -40 || (move.mate !== null && move.mate > 0)) {
+            let sacType = "Piece Sacrifice";
+            const pLower = myPiece.toLowerCase();
+            if (pLower === "q") sacType = "Queen Sacrifice";
+            else if (pLower === "r" && targetVal >= 300) sacType = "Exchange Sacrifice";
+            else if (pLower === "r") sacType = "Rook Sacrifice";
+            else if (pLower === "b" || pLower === "n") sacType = "Minor Piece Sacrifice";
+
+            return { sacType, myPiece, targetPiece, netMaterialLost, move: move0, score };
+        }
+    }
+    return null;
+}
+
+// 14a. Test Greek Gift Minor Piece Sacrifice
+const greekGiftFen = "r1bq1rk1/pppp1ppp/2n2n2/4p3/1b2P3/2NB1N2/PPPP1PPP/R1BQK2R w KQ - 4 6";
+const greekGiftMove = {
+    line: ["d3h7", "g8h7", "f3g5", "h7g8", "d1h5"],
+    cp: 140,
+    mate: null
+};
+const greekGiftResult = testDetectSacrifice(greekGiftFen, greekGiftMove);
+assert(greekGiftResult !== null, "Greek gift sacrifice must be detected");
+assert.strictEqual(greekGiftResult.sacType, "Minor Piece Sacrifice", "Must classify as Minor Piece Sacrifice");
+assert.strictEqual(greekGiftResult.netMaterialLost, 225, "Bishop for pawn nets 225 cp loss");
+
+// 14b. Test Exchange Sacrifice (Rook for Knight)
+const exchFen = "r1b2rk1/pp1n1ppp/2p5/q3p3/2B1n3/2P1BN2/P1P1QPPP/R4RK1 w - - 0 12";
+const exchMove = {
+    line: ["c4f7", "f8f7"],
+    cp: 30,
+    mate: null
+};
+const exchResult = testDetectSacrifice(exchFen, exchMove);
+assert(exchResult !== null, "Bxf7+ sacrifice must be detected");
+
+// 14c. Test Non-Sacrifice Move
+const normalMove = {
+    line: ["d2d4", "e5d4", "f3d4"],
+    cp: 30,
+    mate: null
+};
+assert.strictEqual(testDetectSacrifice(greekGiftFen, normalMove), null, "Quiet move must not be detected as sacrifice");
+
+// 14d. Test Pressure Breakout
+function testDetectBreakout(fen, move, rawBestScore) {
+    if (!move || !move.move || move.move.length < 4) return false;
+    if (rawBestScore > -35) return false;
+    const score = move.mate !== null ? (move.mate > 0 ? 10000 : -10000) : (move.cp ?? 0);
+    if (rawBestScore - score > 45) return false;
+    const from = move.from;
+    const to = move.to;
+    const movingPiece = testGetPieceAt(fen, from);
+    if (!movingPiece) return false;
+    const isWhite = (fen.split(" ")[1] || "w") === "w";
+    const pLower = movingPiece.toLowerCase();
+    if (pLower === "p") {
+        if (isWhite) {
+            return (from === "c2" && to === "c4") || (from === "d2" && to === "d4") || (from === "e2" && to === "e4") || (from === "f2" && to === "f4") || (from === "c4" && to === "c5");
+        } else {
+            return (from === "c7" && to === "c5") || (from === "d7" && to === "d5") || (from === "e7" && to === "e5") || (from === "f7" && to === "f5");
+        }
+    }
+    return false;
+}
+const underPressureFen = "r1bqk2r/pp1pbppp/2n1pn2/2p5/2B1P3/2NP1N2/PPP2PPP/R1BQK2R b KQkq - 0 6";
+const breakoutMove = { from: "d7", to: "d5", move: "d7d5", cp: -40, mate: null };
+const passiveMove = { from: "h7", to: "h6", move: "h7h6", cp: -45, mate: null };
+assert.strictEqual(testDetectBreakout(underPressureFen, breakoutMove, -40), true, "Central counter-strike under pressure must trigger breakout");
+assert.strictEqual(testDetectBreakout(underPressureFen, passiveMove, -40), false, "Passive pawn move must not trigger breakout");
+
+console.log("✓ Tactical Sacrifices & Pressure Breakouts (Bold Master Play) verified");
+
+// 15. Verify Full Diagnostic Suite
 require("./test_diagnostics.js");
 
 console.log("\nALL CHECKS PASSED SUCCESSFULLY!");

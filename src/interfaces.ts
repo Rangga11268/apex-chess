@@ -276,6 +276,7 @@ interface ExtensionOptions
     blunder_alarm?: boolean;
     cheat_sheet_enabled?: boolean;
     auto_move_tempo?: number;
+    tactical_sacrifices?: boolean;
 }
 
 type TGrandmasterPersona = "engine" | "magnus" | "tal" | "kasparov" | "nakamura" | "karpov";

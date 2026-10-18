@@ -262,6 +262,125 @@ export class GrandmasterPersonaHelper
         return { totalNonPawns, queens, whiteKing, blackKing };
     }
 
+    static getPieceValue(piece: string | null): number
+    {
+        if (!piece) return 0;
+        switch (piece.toLowerCase())
+        {
+            case "p": return 100;
+            case "n": return 310;
+            case "b": return 325;
+            case "r": return 500;
+            case "q": return 950;
+            case "k": return 20000;
+            default: return 0;
+        }
+    }
+
+    static detectSacrifice(fen: string, move: TopMove): {
+        sacType: string;
+        myPiece: string;
+        targetPiece: string | null;
+        netMaterialLost: number;
+        move: string;
+        score: number;
+    } | null
+    {
+        if (!move || !move.line || move.line.length < 2) return null;
+        const move0 = move.line[0];
+        const move1 = move.line[1];
+        if (!move0 || !move1 || move0.length < 4 || move1.length < 4) return null;
+
+        const from0 = move0.substring(0, 2);
+        const to0 = move0.substring(2, 4);
+        const to1 = move1.substring(2, 4);
+
+        const isRecaptured = (to1 === to0);
+
+        const myPiece = this.getPieceAt(fen, from0);
+        const targetPiece = this.getPieceAt(fen, to0);
+        if (!myPiece) return null;
+
+        const myVal = this.getPieceValue(myPiece);
+        const targetVal = this.getPieceValue(targetPiece);
+        const netMaterialLost = myVal - targetVal;
+
+        if (isRecaptured && netMaterialLost >= 150)
+        {
+            const score = move.mate !== null ? (move.mate > 0 ? 10000 : -10000) : (move.cp ?? 0);
+            if (score >= -40 || (move.mate !== null && move.mate > 0))
+            {
+                let sacType = "Piece Sacrifice";
+                const pLower = myPiece.toLowerCase();
+                if (pLower === "q") sacType = "Queen Sacrifice";
+                else if (pLower === "r" && targetVal >= 300) sacType = "Exchange Sacrifice";
+                else if (pLower === "r") sacType = "Rook Sacrifice";
+                else if (pLower === "b" || pLower === "n") sacType = "Minor Piece Sacrifice";
+
+                return {
+                    sacType,
+                    myPiece,
+                    targetPiece,
+                    netMaterialLost,
+                    move: move0,
+                    score
+                };
+            }
+        }
+        return null;
+    }
+
+    static detectBreakout(fen: string, move: TopMove, rawBestScore: number): boolean
+    {
+        if (!move || !move.move || move.move.length < 4) return false;
+        if (rawBestScore > -35) return false;
+
+        const score = move.mate !== null ? (move.mate > 0 ? 10000 : -10000) : (move.cp ?? 0);
+        if (rawBestScore - score > 45) return false;
+
+        const from = move.from;
+        const to = move.to;
+        const movingPiece = this.getPieceAt(fen, from);
+        if (!movingPiece) return false;
+
+        const isWhite = (fen.split(" ")[1] || "w") === "w";
+        const pLower = movingPiece.toLowerCase();
+
+        if (pLower === "p")
+        {
+            if (isWhite)
+            {
+                if ((from === "c2" && to === "c4") || (from === "c3" && to === "c4") ||
+                    (from === "d2" && to === "d4") || (from === "d3" && to === "d4") ||
+                    (from === "e2" && to === "e4") || (from === "e3" && to === "e4") ||
+                    (from === "f2" && to === "f4") || (from === "f3" && to === "f4") ||
+                    (from === "c4" && to === "c5") || (from === "d4" && to === "d5") ||
+                    (from === "e4" && to === "e5") || (from === "f4" && to === "f5"))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if ((from === "c7" && to === "c5") || (from === "c6" && to === "c5") ||
+                    (from === "d7" && to === "d5") || (from === "d6" && to === "d5") ||
+                    (from === "e7" && to === "e5") || (from === "e6" && to === "e5") ||
+                    (from === "f7" && to === "f5") || (from === "f6" && to === "f5"))
+                {
+                    return true;
+                }
+            }
+        }
+        else if (pLower === "n" || pLower === "b")
+        {
+            const isCentralSquare = to === "d4" || to === "e4" || to === "d5" || to === "e5" ||
+                                    to === "c4" || to === "f4" || to === "c5" || to === "f5";
+            if (isCentralSquare) return true;
+        }
+
+        return false;
+    }
+
     /**
      * Evaluates a candidate move against a selected persona.
      * Enforces the hard anti-blunder guardrail: maximum delta cp is 65.
@@ -270,13 +389,12 @@ export class GrandmasterPersonaHelper
         move: TopMove,
         bestMove: TopMove,
         persona: TGrandmasterPersona,
-        fen: string
+        fen: string,
+        tacticalSacrifices: boolean = true
     ): number
     {
         const bestScore = bestMove.mate !== null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp ?? 0);
         const moveScore = move.mate !== null ? (move.mate > 0 ? 10000 : -10000) : (move.cp ?? 0);
-
-        if (!persona || persona === "engine") return moveScore;
 
         // Blunder guardrail: do not elevate moves if delta exceeds 65 cp
         // or if bestMove is forced mate and candidate is not
@@ -288,6 +406,28 @@ export class GrandmasterPersonaHelper
         if (delta > 65) return moveScore;
 
         let bonus = 0;
+
+        // Tactical sacrifice bonus (Tal, Kasparov, or Bold Sacrifices enabled)
+        const sacInfo = this.detectSacrifice(fen, move);
+        if (sacInfo)
+        {
+            if (persona === "tal") bonus += 35;
+            else if (persona === "kasparov" || persona === "nakamura") bonus += 25;
+            else if (tacticalSacrifices) bonus += 28;
+        }
+
+        // Pressure breakout bonus (active counter-strike under pressure)
+        if (this.detectBreakout(fen, move, bestScore))
+        {
+            bonus += 22;
+        }
+
+        if (!persona || persona === "engine")
+        {
+            const cappedBonusEngine = Math.min(45, Math.max(0, bonus));
+            return moveScore + cappedBonusEngine;
+        }
+
         const targetSq = move.to;
         const sourceSq = move.from;
         const movingPiece = this.getPieceAt(fen, sourceSq);
@@ -677,6 +817,21 @@ class GameController
                 e.preventDefault();
                 this.master.engine?.adjustAutoMoveTempo(1.0, "reset");
             }
+            else if (e.key.toLowerCase() === "s")
+            {
+                e.preventDefault();
+                this.master.options.tactical_sacrifices = !(this.master.options.tactical_sacrifices !== false);
+                const isEnabled = this.master.options.tactical_sacrifices;
+                const isId = this.master.options.language === "id";
+                const msg = isEnabled ?
+                    (isId ? "💥 Pengorbanan Berani: AKTIF (Mode GM Taktis & Breakout)" : "💥 Bold Sacrifices: ON (GM Tactical & Breakout Mode)") :
+                    (isId ? "🛡️ Pengorbanan Berani: NONAKTIF (Mode Standar Engine)" : "🛡️ Bold Sacrifices: OFF (Standard Engine Mode)");
+                showApexHUDToast(msg, 2400);
+                if (typeof chrome !== "undefined" && chrome.storage?.sync)
+                {
+                    chrome.storage.sync.set({ tactical_sacrifices: isEnabled });
+                }
+            }
             else if ((e.key === "?" || (e.shiftKey && e.code === "Slash")) && this.master.options.cheat_sheet_enabled !== false)
             {
                 e.preventDefault();
@@ -747,6 +902,10 @@ class GameController
                     <div class="apex-cheatsheet-row">
                         <span class="apex-key-pill">Space</span>
                         <span class="apex-key-desc">Deep Calculation (Kalkulasi Mendalam Depth 22)</span>
+                    </div>
+                    <div class="apex-cheatsheet-row">
+                        <span class="apex-key-pill">S</span>
+                        <span class="apex-key-desc">Pengorbanan Berani (Toggle GM Sacrifices & Breakouts)</span>
                     </div>
                     <div class="apex-cheatsheet-row">
                         <span class="apex-key-pill">P</span>
@@ -1215,6 +1374,7 @@ class GameController
 
             const bestScore = bestMove.mate != null ? (bestMove.mate > 0 ? 10000 : -10000) : (bestMove.cp || 0);
             const usedBadgeSquares = new Set<string>();
+            const currentFen = this.getFenSafe();
 
             topMoves.forEach((move, idx) =>
             {
@@ -1227,7 +1387,25 @@ class GameController
                 const currentScore = move.mate != null ? (move.mate > 0 ? 10000 : -10000) : (move.cp || 0);
                 const scoreDiff = bestScore - currentScore;
 
-                if (hintMode === "stealth")
+                // 1. Multi-candidate check: Detect genuine tactical piece sacrifice or pressure breakout
+                const sacInfo = currentFen ? GrandmasterPersonaHelper.detectSacrifice(currentFen, move) : null;
+                const isBreakout = currentFen ? GrandmasterPersonaHelper.detectBreakout(currentFen, move, bestScore) : false;
+
+                if (sacInfo && (scoreDiff <= 65 || (move.mate !== null && move.mate > 0)))
+                {
+                    // Grandmaster Tactical Sacrifice (Brilliant !!)
+                    arrowColor = movePalette.brilliant;
+                    moveTypeBadge = "Brilliant";
+                    opacity = 0.95;
+                }
+                else if (isBreakout && scoreDiff <= 40)
+                {
+                    // Grandmaster Breakout / Counter-strike under pressure (Sharp ⚡)
+                    arrowColor = "#8b5cf6";
+                    moveTypeBadge = "Sharp";
+                    opacity = 0.90;
+                }
+                else if (hintMode === "stealth")
                 {
                     // Stealth mode: Highlight the safest humanized move (Rank 2 if close enough, else Rank 1)
                     if (idx === 1 && scoreDiff <= 80)
@@ -2204,8 +2382,8 @@ class StockfishEngine
 
             if (isBestMove)
             {
-                const hasPersona = Boolean(this.master.options.persona && this.master.options.persona !== "engine");
-                if (!hasPersona)
+                const hasPersonaOrSac = Boolean((this.master.options.persona && this.master.options.persona !== "engine") || this.master.options.tactical_sacrifices !== false);
+                if (!hasPersonaOrSac)
                 {
                     if (this.topMoves.length > 0 && this.topMoves[0].move != move.move)
                     {
@@ -2255,12 +2433,53 @@ class StockfishEngine
                     ((typeof this.master.game.controller.getFEN === "function") ? this.master.game.controller.getFEN() : "");
 
                 const budget = this.getTimeBudget();
-
-                // Anti-cheat: Humanized accuracy calibration (~88-92% Master curve) when in pure engine mode
                 const usePersona = Boolean(this.master.options.persona && this.master.options.persona !== "engine");
                 let chosenMove = top_pv_moves[0];
+                let chosenSacInfo: any = null;
+                let chosenBreakoutCandidate: TopMove | null = null;
 
-                if (!usePersona && !budget.forceBestMove && top_pv_moves.length > 1)
+                // 1. Tactical Sacrifices & Breakouts (Bold Master Play)
+                const allowTacticalSacrifices = this.master.options.tactical_sacrifices !== false;
+                if (allowTacticalSacrifices && currentFen && top_pv_moves.length > 0)
+                {
+                    const m0 = top_pv_moves[0];
+                    const score0 = m0.mate !== null ? (m0.mate > 0 ? 10000 : -10000) : (m0.cp ?? 0);
+
+                    for (const cand of top_pv_moves)
+                    {
+                        const candScore = cand.mate !== null ? (cand.mate > 0 ? 10000 : -10000) : (cand.cp ?? 0);
+                        const delta = score0 - candScore;
+
+                        // Check if candidate is a sound tactical sacrifice
+                        if (delta <= 50 || (cand.mate !== null && cand.mate > 0) || (candScore >= 80 && delta <= 70))
+                        {
+                            const detectedSac = GrandmasterPersonaHelper.detectSacrifice(currentFen, cand);
+                            if (detectedSac)
+                            {
+                                chosenSacInfo = detectedSac;
+                                chosenMove = cand;
+                                break;
+                            }
+                        }
+
+                        // Check if candidate is a pressure breakout counter-strike
+                        if (!chosenBreakoutCandidate && delta <= 40 && score0 <= -35)
+                        {
+                            if (GrandmasterPersonaHelper.detectBreakout(currentFen, cand, score0))
+                            {
+                                chosenBreakoutCandidate = cand;
+                            }
+                        }
+                    }
+
+                    if (!chosenSacInfo && chosenBreakoutCandidate && (usePersona || Math.random() < 0.75))
+                    {
+                        chosenMove = chosenBreakoutCandidate;
+                    }
+                }
+
+                // If no sacrifice or breakout was selected, apply standard anti-cheat calibration
+                if (!chosenSacInfo && (!chosenBreakoutCandidate || chosenMove !== chosenBreakoutCandidate) && !usePersona && !budget.forceBestMove && top_pv_moves.length > 1)
                 {
                     const m0 = top_pv_moves[0];
                     const score0 = m0.mate !== null ? (m0.mate > 0 ? 10000 : -10000) : (m0.cp ?? 0);
@@ -2315,6 +2534,24 @@ class StockfishEngine
 
                     if (finalMove.promotion != null)
                         moveData.promotion = finalMove.promotion;
+
+                    // Tactical toast notification when playing bold sacrifice or breakout
+                    if (chosenSacInfo)
+                    {
+                        const isId = this.master.options.language === "id";
+                        const toastMsg = isId ?
+                            `💥 GM Move: ${chosenSacInfo.sacType} (${chosenSacInfo.move}) — Pengorbanan berani untuk serangan!` :
+                            `💥 GM Move: ${chosenSacInfo.sacType} (${chosenSacInfo.move}) — Tactical sacrifice for decisive attack!`;
+                        showApexHUDToast(toastMsg, 3200);
+                    }
+                    else if (chosenBreakoutCandidate && chosenMove === chosenBreakoutCandidate)
+                    {
+                        const isId = this.master.options.language === "id";
+                        const toastMsg = isId ?
+                            `⚡ GM Breakout: Serangan balik (${chosenBreakoutCandidate.move}) keluar dari tekanan!` :
+                            `⚡ GM Breakout: Counter-strike (${chosenBreakoutCandidate.move}) breaking pressure!`;
+                        showApexHUDToast(toastMsg, 2800);
+                    }
 
                     // 1. Detect if this move is an immediate recapture on opponent's destination square
                     const lastOpponentMove = typeof (this.master.game.controller as any)?.getLastMove === "function" ?
@@ -2408,7 +2645,8 @@ class StockfishEngine
         });
 
         const persona = this.master.options.persona;
-        if (persona && persona !== "engine" && this.topMoves.length > 1)
+        const allowTacticalSacrifices = this.master.options.tactical_sacrifices !== false;
+        if (((persona && persona !== "engine") || allowTacticalSacrifices) && this.topMoves.length > 1)
         {
             const bestMove = this.topMoves[0];
             const fen = typeof (this.master.game as any).getFenSafe === "function" ?
@@ -2431,8 +2669,8 @@ class StockfishEngine
 
                 if (validA && validB)
                 {
-                    const scoreA = GrandmasterPersonaHelper.scorePersonaMove(a, bestMove, persona, fen);
-                    const scoreB = GrandmasterPersonaHelper.scorePersonaMove(b, bestMove, persona, fen);
+                    const scoreA = GrandmasterPersonaHelper.scorePersonaMove(a, bestMove, persona || "engine", fen, allowTacticalSacrifices);
+                    const scoreB = GrandmasterPersonaHelper.scorePersonaMove(b, bestMove, persona || "engine", fen, allowTacticalSacrifices);
                     return scoreB - scoreA;
                 }
 
@@ -2544,6 +2782,7 @@ var ChromeRequest = (function ()
                         deep_calc_enabled: true,
                         persona: "engine",
                         language: "id",
+                        tactical_sacrifices: true,
                         stockfishUrl: (document.currentScript as HTMLScriptElement)?.dataset?.stockfishUrl,
                         ecoUrl: (document.currentScript as HTMLScriptElement)?.dataset?.ecoUrl,
                     };
