@@ -161,3 +161,37 @@ body.apex-stealth-hidden svg.chessmint-marking {
     transform: translateX(-50%) scale(1.04);
     background: rgba(22, 29, 44, 0.98);
 }
+
+/* Real-time Interactive Tempo Chip in Opening HUD */
+.apex-opening-hud .apex-tempo-badge {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.apex-opening-hud .apex-tempo-badge:hover {
+    background: rgba(56, 189, 248, 0.28);
+    transform: scale(1.05);
+}
+
+.apex-opening-hud .apex-tempo-badge.is-hold {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+    color: #fbbf24;
+    animation: apexPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes apexPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(0.97); }
+}

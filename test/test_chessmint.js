@@ -408,12 +408,58 @@ assert(magnusScore > 20, "Magnus must receive endgame consolidation bonus");
 // 13. Verify Real-time Auto-Move Interactive Controls (Hold / Pura-pura Mikir, Slower, Faster)
 assert(optionsHtml.includes("option-auto-move-tempo"), "options.html must contain option-auto-move-tempo selector");
 assert(optionsHtml.includes("auto-move-controls-chip"), "options.html must contain auto-move-controls-chip hotkey guide");
+assert(optionsHtml.includes('value="0.5"'), "options.html must contain 0.5x bullet tempo option");
 assert(depthbarCss.includes("apex-hold-badge"), "depthbar.css must include apex-hold-badge styles");
+assert(depthbarCss.includes("apex-tempo-badge"), "depthbar.css must include apex-tempo-badge styles");
 
 assert(cmCode.includes("toggleAutoMoveHold") || cmCode.includes("isAutoMoveHold"), "chessmint.js must include auto-move hold logic");
 assert(cmCode.includes("adjustAutoMoveTempo") || cmCode.includes("autoMoveTempoMultiplier"), "chessmint.js must include auto-move tempo control");
 assert(cmCode.includes("addThinkingDelay"), "chessmint.js must include addThinkingDelay for deep contemplation pauses");
 assert(cmCode.includes("apex-hold-badge"), "chessmint.js must reference apex-hold-badge HUD indicator");
+assert(cmCode.includes("resetAutoMoveSession"), "chessmint.js must include resetAutoMoveSession");
+assert(cmCode.includes("scheduledAt"), "chessmint.js must track scheduledAt for accurate elapsed time calculation");
+assert(cmCode.includes("pendingExtraThinkingMs"), "chessmint.js must track pendingExtraThinkingMs for deferred pause");
+assert(cmCode.includes("updateTempoHUD"), "chessmint.js must include updateTempoHUD");
+
+// Verify discrete tempo stepping logic
+function stepTempo(current, direction) {
+    const steps = [0.5, 0.7, 1.0, 1.5, 2.0, 3.0];
+    if (direction === "reset") return 1.0;
+    if (direction === "faster") {
+        const lowerSteps = steps.filter(s => s < current - 0.05);
+        return lowerSteps.length > 0 ? lowerSteps[lowerSteps.length - 1] : 0.5;
+    }
+    if (direction === "slower") {
+        const higherSteps = steps.filter(s => s > current + 0.05);
+        return higherSteps.length > 0 ? higherSteps[0] : 3.0;
+    }
+    return current;
+}
+
+assert.strictEqual(stepTempo(1.0, "faster"), 0.7, "1.0x faster steps to 0.7x");
+assert.strictEqual(stepTempo(0.7, "faster"), 0.5, "0.7x faster steps to 0.5x");
+assert.strictEqual(stepTempo(0.5, "faster"), 0.5, "0.5x faster clamps at 0.5x");
+assert.strictEqual(stepTempo(1.0, "slower"), 1.5, "1.0x slower steps to 1.5x");
+assert.strictEqual(stepTempo(1.5, "slower"), 2.0, "1.5x slower steps to 2.0x");
+assert.strictEqual(stepTempo(2.0, "slower"), 3.0, "2.0x slower steps to 3.0x");
+assert.strictEqual(stepTempo(3.0, "slower"), 3.0, "3.0x slower clamps at 3.0x");
+assert.strictEqual(stepTempo(2.0, "reset"), 1.0, "Reset restores 1.0x");
+
+// Verify in-flight reschedule logic: faster must NEVER extend remaining wait time
+function rescheduleDelay(activeDelayMs, scheduledAt, now, direction) {
+    const elapsed = Math.max(0, now - scheduledAt);
+    const remaining = Math.max(0, activeDelayMs - elapsed);
+    if (direction === "faster") {
+        return remaining <= 250 ? 50 : Math.max(50, Math.round(remaining * 0.6));
+    }
+    return Math.max(250, Math.round(remaining * 1.5 + 400));
+}
+
+const testNow = 11500;
+const testScheduledAt = 10000; // 1500ms elapsed out of 2000ms delay (500ms left)
+const newFasterDelay = rescheduleDelay(2000, testScheduledAt, testNow, "faster");
+assert(newFasterDelay <= 300, "Faster must reduce remaining 500ms down to <= 300ms");
+assert((testNow - testScheduledAt) + newFasterDelay < 2000, "Total wait after pressing faster must be strictly less than original delay");
 
 // Verify tempo calculation clamping & math logic
 function calculateTempoDelay(baseDelay, multiplier) {

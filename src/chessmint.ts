@@ -618,6 +618,7 @@ class GameController
         }
 
         this.updatePersonaHUD();
+        this.updateTempoHUD();
     }
 
     private CreateAnalysisTools()
@@ -687,10 +688,16 @@ class GameController
                 let hud = document.createElement("div");
                 hud.id = "apex-opening-hud";
                 hud.className = "apex-opening-hud apex-hud-hidden";
-                hud.innerHTML = `<span class="apex-persona-badge apex-badge-hidden"></span><span class="apex-eco-code">ECO</span><span class="apex-eco-name">Opening</span>`;
+                hud.innerHTML = `<span class="apex-persona-badge apex-badge-hidden"></span><span class="apex-eco-code">ECO</span><span class="apex-eco-name">Opening</span><span class="apex-tempo-badge apex-badge-hidden" title="Tempo Auto-Move (Klik untuk Hold/Resume)">🎯 1.0x</span>`;
                 layoutMain.insertBefore(hud, layoutChessboard);
                 this.openingHUD = hud;
+                const tempoBadge = hud.querySelector(".apex-tempo-badge") as HTMLElement;
+                if (tempoBadge)
+                {
+                    tempoBadge.onclick = () => this.master.engine?.toggleAutoMoveHold();
+                }
                 this.updatePersonaHUD();
+                this.updateTempoHUD();
             }
         }, 20);
     }
@@ -805,17 +812,17 @@ class GameController
             else if (e.key === "[" || (e.shiftKey && e.code === "BracketLeft"))
             {
                 e.preventDefault();
-                this.master.engine?.adjustAutoMoveTempo(1.35, "slower");
+                this.master.engine?.adjustAutoMoveTempo("slower");
             }
             else if (e.key === "]" || (e.shiftKey && e.code === "BracketRight"))
             {
                 e.preventDefault();
-                this.master.engine?.adjustAutoMoveTempo(0.75, "faster");
+                this.master.engine?.adjustAutoMoveTempo("faster");
             }
             else if (e.key === "\\" || e.key === "0")
             {
                 e.preventDefault();
-                this.master.engine?.adjustAutoMoveTempo(1.0, "reset");
+                this.master.engine?.adjustAutoMoveTempo("reset");
             }
             else if (e.key.toLowerCase() === "s")
             {
@@ -1258,12 +1265,44 @@ class GameController
         }
     }
 
+    updateTempoHUD()
+    {
+        if (!this.openingHUD) return;
+        const tempoBadge = this.openingHUD.querySelector(".apex-tempo-badge") as HTMLElement;
+        if (!tempoBadge) return;
+
+        if (!this.master.options.auto_move)
+        {
+            tempoBadge.classList.add("apex-badge-hidden");
+            return;
+        }
+
+        tempoBadge.classList.remove("apex-badge-hidden");
+        const multiplier = this.master.engine?.autoMoveTempoMultiplier || 1.0;
+        const isHold = this.master.engine?.isAutoMoveHold;
+
+        if (isHold)
+        {
+            tempoBadge.textContent = "⏸️ HOLD";
+            tempoBadge.classList.add("is-hold");
+            tempoBadge.title = "Auto-move di-hold (Pura-pura mikir). Klik atau tekan 'P' untuk lanjut melangkah";
+        }
+        else
+        {
+            tempoBadge.classList.remove("is-hold");
+            const icon = multiplier > 1.0 ? "🐢" : (multiplier < 1.0 ? "⚡" : "🎯");
+            tempoBadge.textContent = `${icon} ${multiplier}x`;
+            tempoBadge.title = `Tempo: ${multiplier}x. Klik untuk Hold (P), atau gunakan [ / ] untuk ubah tempo`;
+        }
+    }
+
     private ResetGame()
     {
         if (this.isDestroyed) return;
         this.RemoveCurrentMarkings();
         this.ClearAnalysisMarkings();
         this.clearThreatMarkings();
+        this.master.engine?.resetAutoMoveSession();
         this.UpdateEngine(true);
     }
 
@@ -1677,6 +1716,8 @@ class StockfishEngine
     private pendingAutoMove: { moveData: any; currentFen: string; chosenMove: any } | null = null;
     private autoMoveHoldBadge: HTMLElement | null = null;
     private activeDelayMs: number = 0;
+    private scheduledAt: number = 0;
+    private pendingExtraThinkingMs: number = 0;
 
     private options: { [opt: string]: string | number | boolean; };
 
@@ -1903,9 +1944,10 @@ class StockfishEngine
     getTimeBudget(): EngineTimeBudget
     {
         const userDepth = this.depth || 12;
+        let budget: EngineTimeBudget;
         if (this.master?.options?.adaptive_timing === false)
         {
-            return {
+            budget = {
                 movetime: 1200,
                 depthCap: userDepth,
                 minDelay: 2200,
@@ -1914,9 +1956,24 @@ class StockfishEngine
                 remainingSec: null,
             };
         }
+        else
+        {
+            const remainingSec = this.master?.game?.getRemainingTimeSeconds?.() ?? null;
+            budget = StockfishEngine.calculateTimeBudget(remainingSec, userDepth);
+        }
 
-        const remainingSec = this.master?.game?.getRemainingTimeSeconds?.() ?? null;
-        return StockfishEngine.calculateTimeBudget(remainingSec, userDepth);
+        // Scale movetime when user selects fast tempo so Stockfish finishes calculation faster
+        if (this.autoMoveTempoMultiplier < 1.0)
+        {
+            const speedFactor = Math.max(0.35, this.autoMoveTempoMultiplier);
+            budget.movetime = Math.max(80, Math.round(budget.movetime * speedFactor));
+        }
+        else if (this.autoMoveTempoMultiplier > 1.5)
+        {
+            budget.movetime = Math.min(2500, Math.round(budget.movetime * 1.3));
+        }
+
+        return budget;
     }
 
     go(): void
@@ -2024,6 +2081,22 @@ class StockfishEngine
         });
     }
 
+    public resetAutoMoveSession()
+    {
+        if (this.autoMoveTimeout)
+        {
+            clearTimeout(this.autoMoveTimeout);
+            this.autoMoveTimeout = null;
+        }
+        this.pendingAutoMove = null;
+        this.isAutoMoveHold = false;
+        this.pendingExtraThinkingMs = 0;
+        this.activeDelayMs = 0;
+        this.scheduledAt = 0;
+        this.updateHoldBadge();
+        this.master.game?.updateTempoHUD();
+    }
+
     UpdateExtensionOptions()
     {
         this.depth = this.master.options.depth || 12;
@@ -2036,6 +2109,7 @@ class StockfishEngine
         {
             this.autoMoveTempoMultiplier = this.master.options.auto_move_tempo;
         }
+        this.master.game?.updateTempoHUD();
         if (this.topMoves.length > 0)
             this.onTopMoves(null, !this.isEvaluating);
     }
@@ -2075,69 +2149,136 @@ class StockfishEngine
         {
             if (this.autoMoveTimeout)
             {
+                const now = Date.now();
+                const elapsed = Math.max(0, now - this.scheduledAt);
+                this.activeDelayMs = Math.max(150, this.activeDelayMs - elapsed);
                 clearTimeout(this.autoMoveTimeout);
                 this.autoMoveTimeout = null;
             }
             this.updateHoldBadge(this.pendingAutoMove?.chosenMove);
-            showApexHUDToast("⏸️ AUTO-MOVE DI-HOLD (Pura-pura mikir...) [Tekan 'P' atau Klik untuk melangkah]", 3200);
+            this.master.game?.updateTempoHUD();
+            const isId = this.master.options.language === "id";
+            showApexHUDToast(isId ?
+                "⏸️ AUTO-MOVE DI-HOLD (Pura-pura mikir...) [Tekan 'P' atau Klik untuk melangkah]" :
+                "⏸️ AUTO-MOVE PAUSED (Thinking...) [Press 'P' or Click to play]", 3200);
         }
         else
         {
             this.updateHoldBadge();
-            showApexHUDToast("▶️ RESUME AUTO-MOVE: Melangkah sekarang!", 2000);
+            this.master.game?.updateTempoHUD();
+            const isId = this.master.options.language === "id";
+            showApexHUDToast(isId ? "▶️ RESUME AUTO-MOVE: Melangkah sekarang!" : "▶️ RESUME AUTO-MOVE: Playing now!", 2000);
             if (this.pendingAutoMove)
             {
                 const { moveData, currentFen } = this.pendingAutoMove;
                 this.pendingAutoMove = null;
                 setTimeout(() => {
                     this.executeMoveIfValid(moveData, currentFen);
-                }, 280);
+                }, 180);
             }
         }
     }
 
     public addThinkingDelay(extraMs = 3000)
     {
-        if (this.autoMoveTimeout && this.pendingAutoMove)
+        const isId = this.master.options.language === "id";
+        if (this.autoMoveTimeout && this.pendingAutoMove && !this.isAutoMoveHold)
         {
             clearTimeout(this.autoMoveTimeout);
-            this.activeDelayMs += extraMs;
-            const remainingDelay = Math.max(400, this.activeDelayMs);
-            showApexHUDToast(`🧠 Pura-pura Mikir: +${extraMs / 1000}s (Total jeda ~${(remainingDelay / 1000).toFixed(1)}s)`, 2400);
+            const now = Date.now();
+            const elapsed = Math.max(0, now - this.scheduledAt);
+            const remaining = Math.max(0, this.activeDelayMs - elapsed);
+            const newDelay = remaining + extraMs;
+            this.activeDelayMs = newDelay;
+            this.scheduledAt = now;
+
+            showApexHUDToast(isId ?
+                `🧠 Pura-pura Mikir: +${extraMs / 1000}s (Sisa jeda ~${(newDelay / 1000).toFixed(1)}s)` :
+                `🧠 Human Pause: +${extraMs / 1000}s (~${(newDelay / 1000).toFixed(1)}s remaining)`, 2400);
 
             const { moveData, currentFen } = this.pendingAutoMove;
             this.autoMoveTimeout = setTimeout(() => {
                 this.autoMoveTimeout = null;
                 this.pendingAutoMove = null;
                 this.executeMoveIfValid(moveData, currentFen);
-            }, remainingDelay);
+            }, newDelay);
         }
         else
         {
-            showApexHUDToast(`🧠 Pura-pura Mikir: Siap +${extraMs / 1000}s ekstra pada giliran berikutnya`, 2200);
+            this.pendingExtraThinkingMs += extraMs;
+            showApexHUDToast(isId ?
+                `🧠 Pura-pura Mikir: Siap +${extraMs / 1000}s ekstra pada giliran berikutnya` :
+                `🧠 Human Pause: Queued +${extraMs / 1000}s on next move`, 2200);
         }
     }
 
-    public adjustAutoMoveTempo(factor: number, label: string)
+    public adjustAutoMoveTempo(directionOrValue: "faster" | "slower" | "reset" | number, _legacyLabel?: string)
     {
-        if (factor === 1)
+        const steps = [0.5, 0.7, 1.0, 1.5, 2.0, 3.0];
+        let current = this.autoMoveTempoMultiplier;
+
+        if (directionOrValue === "reset" || directionOrValue === 1.0)
         {
             this.autoMoveTempoMultiplier = 1.0;
-            showApexHUDToast(`🎯 Tempo Reset: 1.0x (Normal Adaptif)`, 2200);
-            return;
+        }
+        else if (directionOrValue === "faster")
+        {
+            const lowerSteps = steps.filter(s => s < current - 0.05);
+            this.autoMoveTempoMultiplier = lowerSteps.length > 0 ? lowerSteps[lowerSteps.length - 1] : 0.5;
+        }
+        else if (directionOrValue === "slower")
+        {
+            const higherSteps = steps.filter(s => s > current + 0.05);
+            this.autoMoveTempoMultiplier = higherSteps.length > 0 ? higherSteps[0] : 3.0;
+        }
+        else if (typeof directionOrValue === "number")
+        {
+            this.autoMoveTempoMultiplier = Math.max(0.25, Math.min(4.0, Number(directionOrValue.toFixed(2))));
         }
 
-        this.autoMoveTempoMultiplier = Math.max(0.25, Math.min(4.0, Number((this.autoMoveTempoMultiplier * factor).toFixed(2))));
-        const desc = this.autoMoveTempoMultiplier > 1.0 ? "Lebih Santai / Slower" : (this.autoMoveTempoMultiplier < 1.0 ? "Lebih Cepat / Faster" : "Normal");
-        const icon = factor > 1 ? "🐢" : "⚡";
+        this.master.options.auto_move_tempo = this.autoMoveTempoMultiplier;
+        if (typeof chrome !== "undefined" && chrome.storage?.sync)
+        {
+            chrome.storage.sync.set({ auto_move_tempo: this.autoMoveTempoMultiplier });
+        }
 
-        showApexHUDToast(`${icon} Tempo Auto-Move: ${this.autoMoveTempoMultiplier}x (${desc})`, 2200);
+        const isId = this.master.options.language === "id";
+        const icon = this.autoMoveTempoMultiplier > 1.0 ? "🐢" : (this.autoMoveTempoMultiplier < 1.0 ? "⚡" : "🎯");
+        const desc = this.autoMoveTempoMultiplier === 0.5 ? (isId ? "Kilat / Bullet (Super Cepat)" : "Bullet (Super Fast)") :
+            (this.autoMoveTempoMultiplier === 0.7 ? (isId ? "Cepat / Blitz" : "Fast / Blitz") :
+            (this.autoMoveTempoMultiplier === 1.0 ? (isId ? "Normal Adaptif" : "Adaptive Normal") :
+            (this.autoMoveTempoMultiplier === 1.5 ? (isId ? "Santai / Humanis" : "Relaxed / Human") :
+            (this.autoMoveTempoMultiplier === 2.0 ? (isId ? "Sangat Santai" : "Very Relaxed") :
+            (this.autoMoveTempoMultiplier >= 3.0 ? (isId ? "Meditasi Mendalam" : "Deep Think") : "Kustom")))));
 
+        showApexHUDToast(`${icon} Tempo: ${this.autoMoveTempoMultiplier}x (${desc})`, 2200);
+        this.master.game?.updateTempoHUD();
+
+        // If an auto-move is in-flight waiting, update its timeout smoothly based on remaining time
         if (this.autoMoveTimeout && this.pendingAutoMove && !this.isAutoMoveHold)
         {
             clearTimeout(this.autoMoveTimeout);
-            const newDelay = Math.max(120, Math.round(this.activeDelayMs * factor));
+            const now = Date.now();
+            const elapsed = Math.max(0, now - this.scheduledAt);
+            const remaining = Math.max(0, this.activeDelayMs - elapsed);
+
+            let newDelay = 0;
+            if (directionOrValue === "faster")
+            {
+                newDelay = remaining <= 250 ? 50 : Math.max(50, Math.round(remaining * 0.6));
+            }
+            else if (directionOrValue === "slower")
+            {
+                newDelay = Math.max(250, Math.round(remaining * 1.5 + 400));
+            }
+            else
+            {
+                const ratio = this.autoMoveTempoMultiplier / (current || 1.0);
+                newDelay = Math.max(60, Math.round(remaining * ratio));
+            }
+
             this.activeDelayMs = newDelay;
+            this.scheduledAt = now;
             const { moveData, currentFen } = this.pendingAutoMove;
             this.autoMoveTimeout = setTimeout(() => {
                 this.autoMoveTimeout = null;
@@ -2670,10 +2811,20 @@ class StockfishEngine
                         }
                     }
 
+                    // Consume deferred thinking pause if user pressed 'T' in advance
+                    if (this.pendingExtraThinkingMs > 0)
+                    {
+                        delay += this.pendingExtraThinkingMs;
+                        this.pendingExtraThinkingMs = 0;
+                    }
+
                     // Apply real-time user tempo multiplier
                     delay = Math.max(50, Math.round(delay * this.autoMoveTempoMultiplier));
                     this.activeDelayMs = delay;
+                    this.scheduledAt = Date.now();
                     this.pendingAutoMove = { moveData, currentFen, chosenMove: finalMove };
+
+                    this.master.game?.updateTempoHUD();
 
                     if (this.isAutoMoveHold)
                     {
@@ -2685,6 +2836,7 @@ class StockfishEngine
                     {
                         this.autoMoveTimeout = null;
                         this.pendingAutoMove = null;
+                        this.master.game?.updateTempoHUD();
                         this.executeMoveIfValid(moveData, currentFen);
                     }, delay);
                 }

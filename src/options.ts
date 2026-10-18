@@ -288,6 +288,10 @@ const Translations: { [key: string]: TranslationItem } = {
         id: "Cepat / Blitz (0.7x Faster)",
         en: "Fast / Blitz (0.7x Faster)"
     },
+    optTempoBullet: {
+        id: "Kilat / Bullet (0.5x Super Cepat)",
+        en: "Bullet / Lightning (0.5x Super Fast)"
+    },
     labelAccuracyProfile: {
         id: "Batas Akurasi Humanis:",
         en: "Human Accuracy Cap:"
